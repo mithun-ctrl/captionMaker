@@ -1,7 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
 from pyrogram import Client, filters
-from pyrogram.types import Message
+from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from pyrogram.enums import ParseMode
 import os
 import asyncio
@@ -19,6 +19,47 @@ if not all([api_id, api_hash, bot_token, omdb_api_key]):
 
 # Initialize the bot
 app = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+
+# Define keyboard layouts
+start_keyboard = InlineKeyboardMarkup([
+    [InlineKeyboardButton("🏠 Home", callback_data="home"),
+     InlineKeyboardButton("ℹ️ Help", callback_data="help")],
+    [InlineKeyboardButton("💬 Support", callback_data="support")]
+])
+
+# Define messages for different sections
+START_TEXT = """Welcome to Movie Caption Bot! 🎬
+
+I can help you create beautiful captions for movies with automatic poster fetching.
+
+Use /caption followed by the movie name
+Example: `/caption The Dark Knight`"""
+
+HELP_TEXT = """🔍 **Available Commands:**
+
+• /start - Start the bot
+• /caption [movie name] - Get movie poster with caption
+• /help - Show this help message
+
+**How to use:**
+1. Just send /caption followed by movie name
+2. Wait for the bot to fetch details
+3. Get your poster with formatted caption!"""
+
+SUPPORT_TEXT = """**Join Our Channels:**
+
+• @Teamxpirates - Main Channel
+• @XpiratesTeam - Support Channel
+
+Join us for updates and support!"""
+
+async def download_image(url):
+    """Download image from URL"""
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status == 200:
+                return await response.read()
+    return None
 
 async def fetch_movie_data(movie_name):
     """Fetch movie data from OMDB API"""
@@ -59,11 +100,60 @@ def format_caption(movie, audio, genre, synopsis):
 
 @app.on_message(filters.command(["start"]))
 async def start_command(client, message):
-    await message.reply_text(
-        "Welcome! To get movie information and poster:\n"
-        "Use /caption followed by the movie name\n"
-        "Example: `/caption The Dark Knight`"
-    )
+    try:
+        # Download start image
+        start_image = await download_image("https://jpcdn.it/img/small/682f656e6957597eebce76a1b99ea9e4.jpg")
+        if start_image:
+            # Convert image data to BytesIO
+            image_stream = BytesIO(start_image)
+            image_stream.name = "start_image.jpg"
+            
+            # Send image with caption and buttons
+            await client.send_photo(
+                chat_id=message.chat.id,
+                photo=image_stream,
+                caption=START_TEXT,
+                reply_markup=start_keyboard,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        else:
+            # Fallback if image download fails
+            await message.reply_text(
+                START_TEXT,
+                reply_markup=start_keyboard,
+                parse_mode=ParseMode.MARKDOWN
+            )
+    except Exception as e:
+        print(f"Start command error: {str(e)}")
+        await message.reply_text("An error occurred. Please try again later.")
+
+@app.on_callback_query()
+async def callback_query(client, callback_query: CallbackQuery):
+    try:
+        if callback_query.data == "home":
+            await callback_query.message.edit_caption(
+                caption=START_TEXT,
+                reply_markup=start_keyboard,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        
+        elif callback_query.data == "help":
+            await callback_query.message.edit_caption(
+                caption=HELP_TEXT,
+                reply_markup=start_keyboard,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        
+        elif callback_query.data == "support":
+            await callback_query.message.edit_caption(
+                caption=SUPPORT_TEXT,
+                reply_markup=start_keyboard,
+                parse_mode=ParseMode.MARKDOWN
+            )
+        
+        await callback_query.answer()
+    except Exception as e:
+        print(f"Callback query error: {str(e)}")
 
 @app.on_message(filters.command(["caption"]))
 async def caption_command(client, message):
@@ -108,7 +198,7 @@ async def caption_command(client, message):
 
         # Prepare poster for sending
         poster_stream = BytesIO(poster_data)
-        poster_stream.name = "poster.jpg"  # Set a filename
+        poster_stream.name = "poster.jpg"
 
         # Send poster with caption
         await client.send_photo(
@@ -123,7 +213,7 @@ async def caption_command(client, message):
 
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
-        print(f"Error: {str(e)}")
+        print(f"Caption command error: {str(e)}")
 
 print("Bot is Starting...")
 app.run()
