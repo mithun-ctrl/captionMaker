@@ -153,7 +153,7 @@ async def callback_query(client, callback_query: CallbackQuery):
             await callback_query.message.edit_caption(
                 caption=SUPPORT_TEXT,
                 reply_markup=start_keyboard,
-                parse_mode=ParseMode.MARKDOWN
+                parse_mode=ParseMode.HTML
             )
         
         await callback_query.answer()

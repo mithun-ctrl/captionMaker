@@ -5,11 +5,11 @@ load_dotenv()
 main_channel = os.getenv("MAIN_CHANNEL")
 support_channel = os.getenv("SUPPORT_CHANNEL")
 
-START_TEXT = """Welcome to Movie Caption Bot! 🎬
+START_TEXT = """ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴍᴏᴠɪᴇ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ! 🎬
 
-I can help you create beautiful captions for movies with automatic poster fetching."""
+ɪ ᴄᴀɴ ʜᴇʟᴘ ʏᴏᴜ ᴄʀᴇᴀᴛᴇ ʙᴇᴀᴜᴛɪғᴜʟ ᴄᴀᴘᴛɪᴏɴs ғᴏʀ ᴍᴏᴠɪᴇs ᴡɪᴛʜ ᴀᴜᴛᴏᴍᴀᴛɪᴄ ᴘᴏsᴛᴇʀ ғᴇᴛᴄʜɪɴɢ."""
 
-ABOUT_TEXT = f"""
+ABOUT_TEXT = """
     🤖 ᴄᴀᴘᴛɪᴏɴ ᴍᴀᴋᴇʀ
     📝 ℑ𝔫𝔣𝔬𝔯𝔪𝔞𝔱𝔦𝔬𝔫:
     ├ ɴᴀᴍᴇ:  ᴛɪᴇʀ ʜᴀʀʀɪʙᴇʟ‌
@@ -18,19 +18,19 @@ ABOUT_TEXT = f"""
     ├ ʟɪʙʀᴀʀʏ: <a href=https://pytba.readthedocs.io/en/latest>ᴘʏʀᴏɢʀᴀᴍ</a>
     └ ᴄʀᴇᴀᴛᴏʀ: <a href=https://t.me/mithun_naam_toh_suna_hoga>ᴍɪᴛʜᴜɴ</a>"""
 
-HELP_TEXT = """🔍 **Available Commands:**
+HELP_TEXT = f"""🔍 **Available Commands:**
 
-• /start - Start the bot
-• /caption [movie name] - Get movie poster with caption
+• /start - sᴛᴀʀᴛ ᴛʜᴇ ʙᴏᴛ
+• /caption [movie name] - ɢᴇᴛ ᴍᴏᴠɪᴇ ᴘᴏsᴛᴇʀ ᴡɪᴛʜ ᴄᴀᴘᴛɪᴏɴ
 
-**How to use:**
-1. Just send /caption followed by movie name
-2. Wait for the bot to fetch details
-3. Get your poster with formatted caption!"""
+**ʜᴏᴡ ᴛᴏ ᴜsᴇ:**
+𝟷. ᴊᴜsᴛ sᴇɴᴅ `/caption` ғᴏʟʟᴏᴡᴇᴅ ʙʏ ᴍᴏᴠɪᴇ ɴᴀᴍᴇ 
+𝟸. ᴡᴀɪᴛ ғᴏʀ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ғᴇᴛᴄʜ ᴅᴇᴛᴀɪʟs 
+𝟹. ɢᴇᴛ ʏᴏᴜʀ ᴘᴏsᴛᴇʀ ᴡɪᴛʜ ғᴏʀᴍᴀᴛᴛᴇᴅ ᴄᴀᴘᴛɪᴏɴ!"""
 
-SUPPORT_TEXT = f"""**Join Our Channels:**
+SUPPORT_TEXT = f"""**ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs:**
 
-• @{main_channel} - Main Channel
-• @{support_channel} - Support Channel
+├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/{main_channel}>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
+├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href https://t.me/{support_channel}>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>
 
-Join us for updates and support!"""
+𝔍𝔬𝔦𝔫 𝔲𝔰 𝔣𝔬𝔯 𝔲𝔭𝔡𝔞𝔱𝔢𝔰 𝔞𝔫𝔡 𝔰𝔲𝔭𝔭𝔬𝔯𝔱!"""
