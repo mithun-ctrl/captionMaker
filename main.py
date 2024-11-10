@@ -1,10 +1,9 @@
 from dotenv import load_dotenv
+load_dotenv()
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import os
 import asyncio
-
-load_dotenv()
 
 # Get environment variables
 api_id = os.environ.get("API_ID")
@@ -62,15 +61,18 @@ async def handle_responses(client, message):
         await message.reply_text("Enter the synopsis:")
     
     elif state == SYNOPSIS:
-        user_data[user_id]["synopsis_p"] = message.text
+        synopsis = message.text.strip()
+        # Remove any existing quotes from the synopsis
+        synopsis = synopsis.replace('"', '').replace('"', '').replace('"', '')
+        user_data[user_id]["synopsis_p"] = synopsis
         
-        # Format the caption
+        # Format the caption with proper synopsis quotes
         caption = f"""{user_data[user_id]['movie_p']}
 » 𝗔𝘂𝗱𝗶𝗼: {user_data[user_id]['audio_p']}
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
 » 𝗚𝗲𝗻𝗿𝗲: {user_data[user_id]['genre_p']}
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
-"{user_data[user_id]['synopsis_p']}"
+"{synopsis}"
 @Teamxpirates
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
         
