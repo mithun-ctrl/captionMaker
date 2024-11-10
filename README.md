@@ -58,7 +58,6 @@ SUPPORT_CHANNEL="espadaSupport"
    - `requirements.txt`
    - `Procfile`
    - `README.md`
-   - `.env.example` (template for environment variables)
 
 The `Procfile` should contain:
 ```
