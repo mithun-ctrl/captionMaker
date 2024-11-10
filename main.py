@@ -29,31 +29,44 @@ SYNOPSIS = 4
 def format_caption(movie, audio, genre, synopsis):
     # Format the caption with Markdown
     caption = f"""{movie}
-» 𝗔𝘂𝗱𝗶𝗼: {audio}
-» 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
-» 𝗚𝗲𝗻𝗿𝗲: {genre}
-» 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
->{synopsis}
+» `𝗔𝘂𝗱𝗶𝗼:` {audio}
+» `𝗤𝘂𝗮𝗹𝗶𝘁𝘆:` 480p | 720p | 1080p 
+» `𝗚𝗲𝗻𝗿𝗲:` {genre}
+» `𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀`
+> {synopsis}
 @Teamxpirates
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
 @app.on_message(filters.command("start"))
 async def start_command(client, message):
-    await message.reply_text("Welcome! You can:\n1. Use /caption to create a new caption\n2. Send an image (with or without caption) and I'll format it properly")
+    await message.reply_text(
+        "Welcome! To create a caption for an image:\n"
+        "1. Send me an image\n"
+        "2. Reply to that image with /caption\n"
+        "3. Follow the prompts to add movie details"
+    )
 
 @app.on_message(filters.command("caption"))
 async def caption_command(client, message):
-    user_id = message.from_user.id
-    user_data[user_id] = {"state": MOVIE}
-    await message.reply_text("Please enter the movie name:")
+    # Check if the command is a reply to an image
+    if message.reply_to_message and message.reply_to_message.photo:
+        user_id = message.from_user.id
+        # Store the photo information for later use
+        user_data[user_id] = {
+            "state": MOVIE,
+            "photo_id": message.reply_to_message.photo.file_id
+        }
+        await message.reply_text("Please enter the movie name:")
+    else:
+        await message.reply_text("Please reply to an image with /caption to create a caption for it.")
 
-@app.on_message(filters.private & filters.text & ~filters.command("start") & ~filters.command("caption"))
+@app.on_message(filters.private & filters.text & ~filters.command())
 async def handle_responses(client, message):
     user_id = message.from_user.id
     
     if user_id not in user_data:
-        await message.reply_text("Please use /caption to start creating a caption.")
+        await message.reply_text("Please send an image and reply to it with /caption to start creating a caption.")
         return
     
     state = user_data[user_id]["state"]
@@ -85,52 +98,21 @@ async def handle_responses(client, message):
             synopsis
         )
         
-        await message.reply_text(
-            "Here's your formatted caption:\n\n" + caption,
+        # Send the image with the new caption
+        await client.send_photo(
+            chat_id=message.chat.id,
+            photo=user_data[user_id]['photo_id'],
+            caption=caption,
             parse_mode=ParseMode.MARKDOWN
         )
+        
         # Clean up user data
         del user_data[user_id]
 
 @app.on_message(filters.photo)
 async def handle_photo(client, message):
-    if message.caption:
-        # Extract information from the caption
-        try:
-            lines = message.caption.split('\n')
-            movie = lines[0]
-            audio = next((line.split(':')[1].strip() for line in lines if '𝗔𝘂𝗱𝗶𝗼' in line), '')
-            genre = next((line.split(':')[1].strip() for line in lines if '𝗚𝗲𝗻𝗿𝗲' in line), '')
-            synopsis_start = message.caption.find('𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀')
-            if synopsis_start != -1:
-                synopsis = message.caption[synopsis_start:].split('\n', 1)[1].strip()
-            else:
-                synopsis = ""
-            
-            # Format new caption
-            new_caption = format_caption(movie, audio, genre, synopsis)
-        except Exception as e:
-            new_caption = format_caption(
-                "Movie Title",
-                "English",
-                "Action",
-                "Please provide synopsis"
-            )
-    else:
-        # Default caption if none provided
-        new_caption = format_caption(
-            "Movie Title",
-            "English",
-            "Action",
-            "Please provide synopsis"
-        )
-    
-    # Reply with the photo and formatted caption
-    await message.reply_photo(
-        photo=message.photo.file_id,
-        caption=new_caption,
-        parse_mode=ParseMode.MARKDOWN
-    )
+    # Simply acknowledge receipt of the photo
+    await message.reply_text("Image received! Reply to this image with /caption to add movie details.")
 
 print("Bot is Starting...")
 app.run()
