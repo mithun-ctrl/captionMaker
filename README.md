@@ -43,6 +43,9 @@ API_ID=your_api_id
 API_HASH=your_api_hash
 BOT_TOKEN=your_bot_token
 OMDB_API_KEY=your_omdb_api_key
+LOG_CHANNEL=your_channel_id
+MAIN_CHANNEL="espada_org"
+SUPPORT_CHANNEL="espadaSupport"
 ```
 
 ## Deployment on Railway
@@ -55,7 +58,6 @@ OMDB_API_KEY=your_omdb_api_key
    - `requirements.txt`
    - `Procfile`
    - `README.md`
-   - `.env.example` (template for environment variables)
 
 The `Procfile` should contain:
 ```
