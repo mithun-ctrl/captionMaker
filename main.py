@@ -11,8 +11,8 @@ from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT
 
 # Get environment variables
-api_id = os.getenv("API_ID")
-api_hash = int(os.getenv("API_HASH"))
+api_id = int(os.getenv("API_ID"))
+api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 omdb_api_key = os.getenv("OMDB_API_KEY")
 log_channel = int(os.getenv("LOG_CHANNEL"))
