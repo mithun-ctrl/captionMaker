@@ -231,8 +231,9 @@ async def start_bot():
         print(f"Bot Crashed: {str(e)}")
         await logger.log_bot_crash(e)
     finally:
-        await espada.stop()
-
+        if espada.is_connected:  # Check if client is still connected before stopping
+            await espada.stop()
+            
 if __name__ == "__main__":
     print("Bot is Starting...")
     espada.run(start_bot())
