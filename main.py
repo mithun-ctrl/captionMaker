@@ -169,7 +169,7 @@ async def caption_command(client, message):
         if not movie_name:
             await message.reply_text(
                 "Please provide a movie name.\n"
-                "Example: `/caption The Dark Knight`"
+                "Example: `/caption Kalki 2898 AD`"
             )
             return
 
