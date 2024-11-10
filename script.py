@@ -14,9 +14,9 @@ ABOUT_TEXT = f"""
     📝 ℑ𝔫𝔣𝔬𝔯𝔪𝔞𝔱𝔦𝔬𝔫:
     ├ ɴᴀᴍᴇ:  ᴛɪᴇʀ ʜᴀʀʀɪʙᴇʟ‌
     ├ ʀᴀɴᴋ: ᴇsᴘᴀᴅᴀ ɴᴏ.𝟹
-    ├ ʟᴀɴɢᴜᴀɢᴇ: [ᴘʏᴛʜᴏɴ](https://www.python.org)
-    ├ ʟɪʙʀᴀʀʏ: [ᴘʏʀᴏɢʀᴀᴍ](https://pytba.readthedocs.io/en/latest/)
-    └ ᴄʀᴇᴀᴛᴏʀ: [ᴍɪᴛʜᴜɴ](https://t.me/mithun_naam_toh_suna_hoga)"""
+    ├ ʟᴀɴɢᴜᴀɢᴇ: <a href=https://www.python.org>ᴘʏᴛʜᴏɴ</a>
+    ├ ʟɪʙʀᴀʀʏ: <a href=https://pytba.readthedocs.io/en/latest>ᴘʏʀᴏɢʀᴀᴍ</a>
+    └ ᴄʀᴇᴀᴛᴏʀ: <a href=https://t.me/mithun_naam_toh_suna_hoga>ᴍɪᴛʜᴜɴ</a>"""
 
 HELP_TEXT = """🔍 **Available Commands:**
 

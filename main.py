@@ -138,7 +138,7 @@ async def callback_query(client, callback_query: CallbackQuery):
         elif callback_query.data == "about":
             caption = ABOUT_TEXT,
             reply_markup = start_keyboard,
-            parse_mode = ParseMode.MARKDOWN
+            parse_mode = ParseMode.HTML
         
         elif callback_query.data == "help":
             await callback_query.message.edit_caption(
