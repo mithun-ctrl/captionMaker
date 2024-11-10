@@ -224,15 +224,12 @@ async def caption_command(client, message):
 async def start_bot():
     try:
         await espada.start()
-        print("Bot Started Successfully!")
         await logger.log_bot_start()
+        print("Bot Started Successfully!")
         await espada.idle()
     except Exception as e:
         print(f"Bot Crashed: {str(e)}")
-        try:
-            await logger.log_bot_crash(e)
-        except:
-            print("Failed to send crash log")
+        await logger.log_bot_crash(e)
     finally:
         await espada.stop()
 
