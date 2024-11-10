@@ -28,9 +28,9 @@ HELP_TEXT = f"""🔍 **Available Commands:**
 𝟸. ᴡᴀɪᴛ ғᴏʀ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ғᴇᴛᴄʜ ᴅᴇᴛᴀɪʟs 
 𝟹. ɢᴇᴛ ʏᴏᴜʀ ᴘᴏsᴛᴇʀ ᴡɪᴛʜ ғᴏʀᴍᴀᴛᴛᴇᴅ ᴄᴀᴘᴛɪᴏɴ!"""
 
-SUPPORT_TEXT = f"""**ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs:**
+SUPPORT_TEXT = """**ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs:**
 
-├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/{main_channel}>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
-├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href https://t.me/{support_channel}>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>
+├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/espada_org>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
+├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href https://t.me/espadaSupport>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>
 
 𝔍𝔬𝔦𝔫 𝔲𝔰 𝔣𝔬𝔯 𝔲𝔭𝔡𝔞𝔱𝔢𝔰 𝔞𝔫𝔡 𝔰𝔲𝔭𝔭𝔬𝔯𝔱!"""
