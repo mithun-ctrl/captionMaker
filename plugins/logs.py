@@ -1,6 +1,5 @@
 # plugins/logs.py
-from pyrogram import Client
-from pyrogram.utils import resolve_peer
+from pyrogram import Client, utils
 from datetime import datetime
 import pytz
 import os
@@ -13,19 +12,30 @@ log_channel_id = int(os.getenv('LOG_CHANNEL'))
 class Logger:
     def __init__(self, client: Client):
         self.client = client
-        # Retrieve and resolve the log channel using resolve_peer
-        log_channel_id = os.getenv("LOG_CHANNEL")
-        if not log_channel_id:
+        self.log_channel = log_channel_id
+        if not self.log_channel:
             raise ValueError("LOG_CHANNEL environment variable is not set")
-
-        # Convert log_channel using resolve_peer
+        
+        # Convert log channel to integer and ensure it has the correct format
         try:
-            self.log_channel = resolve_peer(int(log_channel_id), client)  # Resolve peer ID
+            # Remove any existing prefixes and convert to integer
+            clean_id = str(self.log_channel).replace("-100", "").replace("-", "")
+            self.log_channel = int(f"-100{clean_id}")
+            
+            # Check if the clean ID is numeric
+            if not clean_id.isdigit():
+                raise ValueError("Channel ID must contain only numbers")
+                
+            # For Pyrogram, supergroup/channel IDs should be passed as negative integers
+            # with -100 prefix
+            self.log_channel = int(f"-100{clean_id}")
         except ValueError as e:
             raise ValueError(f"Invalid channel ID format: {str(e)}")
 
     async def send_log(self, message: str, notify: bool = False):
-        """ Helper method to send logs with error handling """
+        """
+        Helper method to send logs with error handling
+        """
         try:
             await self.client.send_message(
                 chat_id=self.log_channel,
