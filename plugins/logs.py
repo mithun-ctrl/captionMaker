@@ -30,7 +30,7 @@ class Logger:
 ║     BOT STARTED      ║
 ╚══════════════════════╝
 
-🤖 **Bot:** @TierHarribelBot
+🤖 **Bot:** @TierHarribelBot 
 📡 **Status:** `Online`
 ⏰ **Start Time:** `{current_time}`
 🟢 **State:** `Operational`
