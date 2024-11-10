@@ -15,7 +15,7 @@ api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 omdb_api_key = os.getenv("OMDB_API_KEY")
-log_channel = int(os.getenv("LOG_CHANNEL"))
+log_channel = int(os.getenv('LOG_CHANNEL'))
 if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
 
@@ -226,7 +226,7 @@ async def start_bot():
         await espada.start()
         await logger.log_bot_start()
         print("Bot Started Successfully!")
-        await espada.idle()
+        await asyncio.sleep(3600)  # Keeps the bot running for a prolonged time
     except Exception as e:
         print(f"Bot Crashed: {str(e)}")
         await logger.log_bot_crash(e)

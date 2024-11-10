@@ -7,10 +7,12 @@ from typing import Optional
 from dotenv import load_dotenv
 load_dotenv()
 
+log_channel_id = int(os.getenv('LOG_CHANNEL'))
+
 class Logger:
     def __init__(self, client: Client):
         self.client = client
-        self.log_channel = int(os.getenv("LOG_CHANNEL"))
+        self.log_channel = log_channel_id
         if not self.log_channel:
             raise ValueError("LOG_CHANNEL environment variable is not set")
         
@@ -18,6 +20,7 @@ class Logger:
         try:
             # Remove any existing prefixes and convert to integer
             clean_id = str(self.log_channel).replace("-100", "").replace("-", "")
+            self.log_channel = int(f"-100{clean_id}")
             
             # Check if the clean ID is numeric
             if not clean_id.isdigit():
