@@ -7,18 +7,22 @@ import os
 import asyncio
 import aiohttp
 from io import BytesIO
+from plugins.logs import Logger
+from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT
 
 # Get environment variables
 api_id = os.environ.get("API_ID")
 api_hash = os.environ.get("API_HASH")
 bot_token = os.environ.get("BOT_TOKEN")
 omdb_api_key = os.environ.get("OMDB_API_KEY")
+log_channel = os.environ.get("LOG_CHANNEL")
 
-if not all([api_id, api_hash, bot_token, omdb_api_key]):
-    raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, and OMDB_API_KEY environment variables")
+if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
+    raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
 
 # Initialize the bot
-app = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+espada = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
+logger = Logger(espada)
 
 # Define keyboard layouts
 start_keyboard = InlineKeyboardMarkup([
@@ -26,32 +30,6 @@ start_keyboard = InlineKeyboardMarkup([
      InlineKeyboardButton("ℹ️ Help", callback_data="help")],
     [InlineKeyboardButton("💬 Support", callback_data="support")]
 ])
-
-# Define messages for different sections
-START_TEXT = """Welcome to Movie Caption Bot! 🎬
-
-I can help you create beautiful captions for movies with automatic poster fetching.
-
-Use /caption followed by the movie name
-Example: `/caption The Dark Knight`"""
-
-HELP_TEXT = """🔍 **Available Commands:**
-
-• /start - Start the bot
-• /caption [movie name] - Get movie poster with caption
-• /help - Show this help message
-
-**How to use:**
-1. Just send /caption followed by movie name
-2. Wait for the bot to fetch details
-3. Get your poster with formatted caption!"""
-
-SUPPORT_TEXT = """**Join Our Channels:**
-
-• @Teamxpirates - Main Channel
-• @XpiratesTeam - Support Channel
-
-Join us for updates and support!"""
 
 async def download_image(url):
     """Download image from URL"""
@@ -98,7 +76,7 @@ def format_caption(movie, audio, genre, synopsis):
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
-@app.on_message(filters.command(["start"]))
+@espada.on_message(filters.command(["start"]))
 async def start_command(client, message):
     try:
         # Download start image
@@ -123,11 +101,24 @@ async def start_command(client, message):
                 reply_markup=start_keyboard,
                 parse_mode=ParseMode.MARKDOWN
             )
+        await logger.log_channel(
+            action="Start Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
+        )
     except Exception as e:
         print(f"Start command error: {str(e)}")
         await message.reply_text("An error occurred. Please try again later.")
+        await logger.log_message(
+            action="Start Command Error",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            error=e
+        )
 
-@app.on_callback_query()
+@espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
     try:
         if callback_query.data == "home":
@@ -155,7 +146,7 @@ async def callback_query(client, callback_query: CallbackQuery):
     except Exception as e:
         print(f"Callback query error: {str(e)}")
 
-@app.on_message(filters.command(["caption"]))
+@espada.on_message(filters.command(["caption"]))
 async def caption_command(client, message):
     try:
         # Extract movie name from command
@@ -210,10 +201,26 @@ async def caption_command(client, message):
 
         # Delete the status message
         await status_message.delete()
+        
+        await logger.log_message(
+            action="Caption Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            chat_title=f"Movie: {movie_data['movie_p']}"
+        )
 
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
         print(f"Caption command error: {str(e)}")
+        
+        await logger.log_message(
+            action="Caption Command Error",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            error=e
+        )
 
 print("Bot is Starting...")
-app.run()
+espada.run()
