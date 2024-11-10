@@ -36,6 +36,7 @@ class Logger:
         
         # Build log message
         log_parts = [
+            f"**Bot:** @TierHarribelBot",
             f"📋 **New {action}**",
             f"⏰ **Time:** `{current_time}`"
         ]

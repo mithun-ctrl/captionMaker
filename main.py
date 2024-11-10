@@ -108,8 +108,8 @@ async def start_command(client, message):
             chat_id=message.chat.id
         )
     except Exception as e:
-        print(f"Start command error: {str(e)}")
         await message.reply_text("An error occurred. Please try again later.")
+        print(f"Start command error: {str(e)}")
         await logger.log_message(
             action="Start Command Error",
             user_id=message.from_user.id,
