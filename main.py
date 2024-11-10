@@ -74,11 +74,10 @@ def format_caption(movie, audio, genre, synopsis):
 @Teamxpirates
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
-
 @espada.on_message(filters.command(["start"]))
 async def start_command(client, message):
     try:
-        # Download start image
+        # Attempt to download and send the start image
         start_image = await download_image("https://jpcdn.it/img/small/682f656e6957597eebce76a1b99ea9e4.jpg")
         if start_image:
             # Convert image data to BytesIO
@@ -100,15 +99,21 @@ async def start_command(client, message):
                 reply_markup=start_keyboard,
                 parse_mode=ParseMode.MARKDOWN
             )
-        await logger.log_channel(
+
+        # Log the start command with correct function call
+        await logger.log_message(
             action="Start Command",
             user_id=message.from_user.id,
             username=message.from_user.username,
             chat_id=message.chat.id
         )
+
     except Exception as e:
-        await message.reply_text("An error occurred with image. Please try again later.")
+        # Send an error message to the user and log the error
+        await message.reply_text("An error occurred. Please try again later.")
         print(f"Start command error: {str(e)}")
+        
+        # Log the error with details
         await logger.log_message(
             action="Start Command Error",
             user_id=message.from_user.id,
@@ -116,6 +121,7 @@ async def start_command(client, message):
             chat_id=message.chat.id,
             error=e
         )
+
 
 @espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
