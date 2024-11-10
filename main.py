@@ -15,7 +15,7 @@ api_id = os.environ.get("API_ID")
 api_hash = os.environ.get("API_HASH")
 bot_token = os.environ.get("BOT_TOKEN")
 omdb_api_key = os.environ.get("OMDB_API_KEY")
-log_channel = int(os.environ.get("LOG_CHANNEL"))
+log_channel = os.environ.get("LOG_CHANNEL")
 if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
 
@@ -224,12 +224,15 @@ async def caption_command(client, message):
 async def start_bot():
     try:
         await espada.start()
-        await logger.log_bot_start()
         print("Bot Started Successfully!")
+        await logger.log_bot_start()
         await espada.idle()
     except Exception as e:
         print(f"Bot Crashed: {str(e)}")
-        await logger.log_bot_crash(e)
+        try:
+            await logger.log_bot_crash(e)
+        except:
+            print("Failed to send crash log")
     finally:
         await espada.stop()
 

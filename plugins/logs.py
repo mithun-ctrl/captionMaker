@@ -8,15 +8,39 @@ from typing import Optional
 class Logger:
     def __init__(self, client: Client):
         self.client = client
-        self.log_channel = int(os.environ.get("LOG_CHANNEL"))
+        self.log_channel = os.environ.get("LOG_CHANNEL")
         if not self.log_channel:
             raise ValueError("LOG_CHANNEL environment variable is not set")
         
-        # Convert log channel to integer
+        # Convert log channel to integer and ensure it has the correct format
         try:
-            self.log_channel = int(self.log_channel)
-        except ValueError:
-            raise ValueError("LOG_CHANNEL must be a valid integer channel ID")
+            # Remove any existing prefixes and convert to integer
+            clean_id = str(self.log_channel).replace("-100", "").replace("-", "")
+            
+            # Check if the clean ID is numeric
+            if not clean_id.isdigit():
+                raise ValueError("Channel ID must contain only numbers")
+                
+            # For Pyrogram, supergroup/channel IDs should be passed as negative integers
+            # with -100 prefix
+            self.log_channel = int(f"-100{clean_id}")
+        except ValueError as e:
+            raise ValueError(f"Invalid channel ID format: {str(e)}")
+
+    async def send_log(self, message: str, notify: bool = False):
+        """
+        Helper method to send logs with error handling
+        """
+        try:
+            await self.client.send_message(
+                chat_id=self.log_channel,
+                text=message,
+                disable_notification=not notify
+            )
+        except Exception as e:
+            print(f"Logging Error: {str(e)}")
+            print(f"Attempted to send to channel: {self.log_channel}")
+            print(f"Message content: {message}")
     
     async def log_bot_start(self):
         """
@@ -30,7 +54,7 @@ class Logger:
 ║     BOT STARTED      ║
 ╚══════════════════════╝
 
-🤖 **Bot:** @TierHarribelBot 
+🤖 **Bot:** @TierHarribelBot
 📡 **Status:** `Online`
 ⏰ **Start Time:** `{current_time}`
 🟢 **State:** `Operational`
@@ -42,14 +66,7 @@ class Logger:
 
 **Bot is Ready to Use!**
 """
-        try:
-            await self.client.send_message(
-                chat_id=self.log_channel,
-                text=log_message,
-                disable_notification=False  # Enable notification for bot start
-            )
-        except Exception as e:
-            print(f"Failed to send bot start log: {str(e)}")
+        await self.send_log(log_message, notify=True)
 
     async def log_bot_crash(self, error: Exception):
         """
@@ -77,14 +94,7 @@ class Logger:
 
 **Immediate Attention Required!**
 """
-        try:
-            await self.client.send_message(
-                chat_id=self.log_channel,
-                text=log_message,
-                disable_notification=False  # Enable notification for crashes
-            )
-        except Exception as e:
-            print(f"Failed to send bot crash log: {str(e)}")
+        await self.send_log(log_message, notify=True)
         
     async def log_message(
         self,
@@ -98,11 +108,9 @@ class Logger:
         """
         Log a message to the specified logging channel
         """
-        # Get current time in IST
         ist = pytz.timezone('Asia/Kolkata')
         current_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S IST")
         
-        # Build log message
         log_parts = [
             f"🤖 **Bot:** @TierHarribelBot",
             f"📋 **New {action}**",
@@ -121,12 +129,4 @@ class Logger:
             log_parts.append(f"❌ **Error:** `{str(error)}`")
             
         log_message = "\n".join(log_parts)
-        
-        try:
-            await self.client.send_message(
-                chat_id=self.log_channel,
-                text=log_message,
-                disable_notification=True
-            )
-        except Exception as e:
-            print(f"Failed to send log message: {str(e)}")
+        await self.send_log(log_message)
