@@ -80,19 +80,22 @@ Railway will automatically detect the Python runtime from your repository and de
 ## Usage
 
 1. Start the bot by sending `/start`
-2. Send an image to the bot
-3. Reply to the image with `/caption`
-4. Enter the movie name when prompted
-5. The bot will automatically fetch movie details and create a formatted caption
+2. Use the `/caption` command followed by the movie name
+   Example: `/caption The Dark Knight`
+3. The bot will automatically:
+   - Fetch movie details from OMDB
+   - Download the movie poster
+   - Add the formatted caption
+   - Send the poster with caption
 
 Example output:
 ```
-Movie Name
-» 𝗔𝘂𝗱𝗶𝗼: English, Hindi
+The Dark Knight
+» 𝗔𝘂𝗱𝗶𝗼: English
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
-» 𝗚𝗲𝗻𝗿𝗲: Action, Adventure
+» 𝗚𝗲𝗻𝗿𝗲: Action, Crime, Drama
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
-> An exciting adventure that follows our hero through incredible challenges.
+> When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.
 @Teamxpirates
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]
 ```
@@ -107,14 +110,14 @@ movie-caption-bot/
 ├── Procfile
 └── README.md
 ```
-
 ## Error Handling
 
-The bot includes error handling for:
+The bot handles various scenarios:
+- Movie not found in OMDB database
+- Poster image not available
+- Network connection issues
 - Invalid movie names
-- OMDB API connection issues
-- Missing environment variables
-- Invalid image formats
+- API timeout errors
 
 ## Contributing
 
