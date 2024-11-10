@@ -68,7 +68,7 @@ async def download_poster(poster_url):
 
 def format_caption(movie, year, audio, genre, synopsis):
     """Format the caption with Markdown"""
-    caption = f""" {movie} {year}
+    caption = f""" {movie} "({year})"
 » 𝗔𝘂𝗱𝗶𝗼: {audio}
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
