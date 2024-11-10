@@ -1,5 +1,7 @@
 from dotenv import load_dotenv
 load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -38,7 +40,7 @@ def format_caption(movie, audio, genre, synopsis):
 [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
-@app.on_message(filters.command("start"))
+@app.on_message(filters.command(["start"]))
 async def start_command(client, message):
     await message.reply_text(
         "Welcome! To create a caption for an image:\n"
@@ -47,7 +49,7 @@ async def start_command(client, message):
         "3. Follow the prompts to add movie details"
     )
 
-@app.on_message(filters.command("caption"))
+@app.on_message(filters.command(["caption"]))
 async def caption_command(client, message):
     # Check if the command is a reply to an image
     if message.reply_to_message and message.reply_to_message.photo:
@@ -61,7 +63,7 @@ async def caption_command(client, message):
     else:
         await message.reply_text("Please reply to an image with /caption to create a caption for it.")
 
-@app.on_message(filters.private & filters.text & ~filters.command())
+@app.on_message(filters.private & filters.text & ~filters.command(["start", "caption"]))
 async def handle_responses(client, message):
     user_id = message.from_user.id
     
