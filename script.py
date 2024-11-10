@@ -22,7 +22,8 @@ HELP_TEXT = f"""🔍 **Available Commands:**
 𝟸. ᴡᴀɪᴛ ғᴏʀ ᴛʜᴇ ʙᴏᴛ ᴛᴏ ғᴇᴛᴄʜ ᴅᴇᴛᴀɪʟs 
 𝟹. ɢᴇᴛ ʏᴏᴜʀ ᴘᴏsᴛᴇʀ ᴡɪᴛʜ ғᴏʀᴍᴀᴛᴛᴇᴅ ᴄᴀᴘᴛɪᴏɴ!"""
 
-SUPPORT_TEXT = """**ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs:**
+SUPPORT_TEXT = """
+**ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs:**
 
 ├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/espada_org>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
 ├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href https://t.me/espadaSupport>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>
