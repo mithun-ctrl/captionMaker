@@ -9,7 +9,7 @@ START_TEXT = """Welcome to Movie Caption Bot! 🎬
 
 I can help you create beautiful captions for movies with automatic poster fetching."""
 
-ABOUT_TEXT = """
+ABOUT_TEXT = f"""
     🤖 ᴄᴀᴘᴛɪᴏɴ ᴍᴀᴋᴇʀ\n\n
     📝 ℑ𝔫𝔣𝔬𝔯𝔪𝔞𝔱𝔦𝔬𝔫:\n
     ├ ɴᴀᴍᴇ:  ᴛɪᴇʀ ʜᴀʀʀɪʙᴇʟ‌\n
