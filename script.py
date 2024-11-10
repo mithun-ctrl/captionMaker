@@ -1,9 +1,3 @@
-from dotenv import load_dotenv
-import os
-load_dotenv()
-
-main_channel = os.getenv("MAIN_CHANNEL")
-support_channel = os.getenv("SUPPORT_CHANNEL")
 
 START_TEXT = """ᴡᴇʟᴄᴏᴍᴇ ᴛᴏ ᴍᴏᴠɪᴇ ᴄᴀᴘᴛɪᴏɴ ʙᴏᴛ! 🎬
 
