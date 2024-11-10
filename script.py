@@ -18,7 +18,7 @@ HELP_TEXT = """🔍 **Available Commands:**
 
 SUPPORT_TEXT = """**Join Our Channels:**
 
-• @Teamxpirates - Main Channel
-• @XpiratesTeam - Support Channel
+• @espada_org - Main Channel
+• @espadaSupport - Support Channel
 
 Join us for updates and support!"""
