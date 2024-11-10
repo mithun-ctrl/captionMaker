@@ -1,8 +1,9 @@
+from dotenv import load_dotenv
 from pyrogram import Client, filters
 from pyrogram.types import Message
 import os
 import asyncio
-from dotenv import load_dotenv
+
 load_dotenv()
 
 # Get environment variables
@@ -35,7 +36,7 @@ async def caption_command(client, message):
     user_data[user_id] = {"state": MOVIE}
     await message.reply_text("Please enter the movie name:")
 
-@app.on_message(filters.private & filters.text & ~filters.command)
+@app.on_message(filters.private & filters.text & ~filters.command("start") & ~filters.command("caption"))
 async def handle_responses(client, message):
     user_id = message.from_user.id
     
@@ -89,6 +90,5 @@ async def handle_photo(client, message):
     else:
         await message.reply_text("Please send the photo with a caption or use /caption first.")
 
-
-# Run the bot
+print("Bot is Starting...")
 app.run()
