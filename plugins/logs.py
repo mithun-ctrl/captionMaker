@@ -8,7 +8,7 @@ from typing import Optional
 class Logger:
     def __init__(self, client: Client):
         self.client = client
-        self.log_channel = os.environ.get("LOG_CHANNEL")
+        self.log_channel = int(os.environ.get("LOG_CHANNEL"))
         if not self.log_channel:
             raise ValueError("LOG_CHANNEL environment variable is not set")
         
