@@ -47,7 +47,6 @@ async def fetch_movie_data(movie_name):
             if data.get('Response') == 'True':
                 return {
                     'movie_p': data.get('Title', movie_name),
-                    'year_p': data.get('Year', 'N/A'),
                     'genre_p': data.get('Genre', 'N/A'),
                     'synopsis_p': data.get('Plot', 'N/A'),
                     'audio_p': data.get('Language', 'N/A'),
@@ -64,9 +63,9 @@ async def download_poster(poster_url):
                     return await response.read()
     return None
 
-def format_caption(movie, year, audio, genre, synopsis):
+def format_caption(movie, audio, genre, synopsis):
     """Format the caption with Markdown"""
-    caption = f"""{movie} {year}
+    caption = f"""{movie}
 » 𝗔𝘂𝗱𝗶𝗼: {audio}
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
