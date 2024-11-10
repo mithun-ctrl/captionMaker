@@ -15,8 +15,7 @@ api_id = os.environ.get("API_ID")
 api_hash = os.environ.get("API_HASH")
 bot_token = os.environ.get("BOT_TOKEN")
 omdb_api_key = os.environ.get("OMDB_API_KEY")
-log_channel = os.environ.get("LOG_CHANNEL")
-
+log_channel = int(os.environ.get("LOG_CHANNEL"))
 if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
 
