@@ -17,7 +17,7 @@ omdb_api_key = os.environ.get("OMDB_API_KEY")
 if not all([api_id, api_hash, bot_token, omdb_api_key]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, and OMDB_API_KEY environment variables")
 
-# Initialize your bot
+# Initialize the bot
 app = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 async def fetch_movie_data(movie_name):
@@ -46,7 +46,7 @@ async def download_poster(poster_url):
     return None
 
 def format_caption(movie, audio, genre, synopsis):
-    # Format the caption with Markdown
+    """Format the caption with Markdown"""
     caption = f"""{movie}
 » `𝗔𝘂𝗱𝗶𝗼:` {audio}
 » `𝗤𝘂𝗮𝗹𝗶𝘁𝘆:` 480p | 720p | 1080p 
@@ -106,10 +106,14 @@ async def caption_command(client, message):
             movie_data['synopsis_p']
         )
 
+        # Prepare poster for sending
+        poster_stream = BytesIO(poster_data)
+        poster_stream.name = "poster.jpg"  # Set a filename
+
         # Send poster with caption
         await client.send_photo(
             chat_id=message.chat.id,
-            photo=poster_data,
+            photo=poster_stream,
             caption=caption,
             parse_mode=ParseMode.MARKDOWN
         )
@@ -118,7 +122,7 @@ async def caption_command(client, message):
         await status_message.delete()
 
     except Exception as e:
-        await message.reply_text(f"An error occurred while processing your request. Please try again later.")
+        await message.reply_text("An error occurred while processing your request. Please try again later.")
         print(f"Error: {str(e)}")
 
 print("Bot is Starting...")
