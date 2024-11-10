@@ -8,7 +8,7 @@ import asyncio
 import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
-from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT
+from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT
 
 # Get environment variables
 api_id = int(os.getenv("API_ID"))
@@ -26,8 +26,10 @@ logger = Logger(espada)
 # Define keyboard layouts
 start_keyboard = InlineKeyboardMarkup([
     [InlineKeyboardButton("🏠 Home", callback_data="home"),
-     InlineKeyboardButton("ℹ️ Help", callback_data="help")],
-    [InlineKeyboardButton("💬 Support", callback_data="support")]
+     InlineKeyboardButton("🤖 About", callback_data="about")
+     ],
+    [InlineKeyboardButton("💬 Support", callback_data="support"),
+     InlineKeyboardButton("ℹ️ Help", callback_data="help")]
 ])
 
 async def download_image(url):
@@ -133,6 +135,10 @@ async def callback_query(client, callback_query: CallbackQuery):
                 reply_markup=start_keyboard,
                 parse_mode=ParseMode.MARKDOWN
             )
+        elif callback_query.data == "about":
+            caption = ABOUT_TEXT,
+            reply_markup = start_keyboard,
+            parse_mode = ParseMode.MARKDOWN
         
         elif callback_query.data == "help":
             await callback_query.message.edit_caption(

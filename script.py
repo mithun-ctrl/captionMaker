@@ -9,6 +9,15 @@ START_TEXT = """Welcome to Movie Caption Bot! 🎬
 
 I can help you create beautiful captions for movies with automatic poster fetching."""
 
+ABOUT_TEXT = (
+    "🤖 ᴄᴀᴘᴛɪᴏɴ ᴍᴀᴋᴇʀ\n\n"
+    "📝 ℑ𝔫𝔣𝔬𝔯𝔪𝔞𝔱𝔦𝔬𝔫:\n"
+    "├ ɴᴀᴍᴇ:  ᴛɪᴇʀ ʜᴀʀʀɪʙᴇʟ‌\n"
+    "├ ʀᴀɴᴋ: ᴇsᴘᴀᴅᴀ ɴᴏ.𝟹\n"
+    "├ ʟᴀɴɢᴜᴀɢᴇ: [ᴘʏᴛʜᴏɴ](https://www.python.org)\n"
+    "├ ʟɪʙʀᴀʀʏ: [ᴘʏʀᴏɢʀᴀᴍ](https://pytba.readthedocs.io/en/latest/)\n"
+    "└ ᴄʀᴇᴀᴛᴏʀ: [ᴍɪᴛʜᴜɴ](https://t.me/mithun_naam_toh_suna_hoga)\n")
+
 HELP_TEXT = """🔍 **Available Commands:**
 
 • /start - Start the bot
