@@ -221,5 +221,18 @@ async def caption_command(client, message):
             error=e
         )
 
-print("Bot is Starting...")
-espada.run()
+async def start_bot():
+    try:
+        await espada.start()
+        await logger.log_bot_start()
+        print("Bot Started Successfully!")
+        await espada.idle()
+    except Exception as e:
+        print(f"Bot Crashed: {str(e)}")
+        await logger.log_bot_crash(e)
+    finally:
+        await espada.stop()
+
+if __name__ == "__main__":
+    print("Bot is Starting...")
+    espada.run(start_bot())

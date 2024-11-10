@@ -17,6 +17,74 @@ class Logger:
             self.log_channel = int(self.log_channel)
         except ValueError:
             raise ValueError("LOG_CHANNEL must be a valid integer channel ID")
+    
+    async def log_bot_start(self):
+        """
+        Log bot startup with distinctive formatting
+        """
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S IST")
+        
+        log_message = f"""
+╔══════════════════════╗
+║     BOT STARTED      ║
+╚══════════════════════╝
+
+🤖 **Bot:** @TierHarribelBot
+📡 **Status:** `Online`
+⏰ **Start Time:** `{current_time}`
+🟢 **State:** `Operational`
+
+╭─────────────────────
+├ **System:** `Active`
+├ **Services:** `Running`
+╰─────────────────────
+
+**Bot is Ready to Use!**
+"""
+        try:
+            await self.client.send_message(
+                chat_id=self.log_channel,
+                text=log_message,
+                disable_notification=False  # Enable notification for bot start
+            )
+        except Exception as e:
+            print(f"Failed to send bot start log: {str(e)}")
+
+    async def log_bot_crash(self, error: Exception):
+        """
+        Log bot crash with distinctive formatting
+        """
+        ist = pytz.timezone('Asia/Kolkata')
+        current_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S IST")
+        
+        log_message = f"""
+╔══════════════════════╗
+║     BOT CRASHED      ║
+╚══════════════════════╝
+
+🤖 **Bot:** @TierHarribelBot
+📡 **Status:** `Offline`
+⏰ **Crash Time:** `{current_time}`
+🔴 **State:** `Crashed`
+
+╭─────────────────────
+├ **System:** `Error`
+├ **Services:** `Stopped`
+├ **Error Details:**
+│ `{str(error)}`
+╰─────────────────────
+
+**Immediate Attention Required!**
+"""
+        try:
+            await self.client.send_message(
+                chat_id=self.log_channel,
+                text=log_message,
+                disable_notification=False  # Enable notification for crashes
+            )
+        except Exception as e:
+            print(f"Failed to send bot crash log: {str(e)}")
         
     async def log_message(
         self,
@@ -36,7 +104,7 @@ class Logger:
         
         # Build log message
         log_parts = [
-            f"**Bot:** @TierHarribelBot",
+            f"🤖 **Bot:** @TierHarribelBot",
             f"📋 **New {action}**",
             f"⏰ **Time:** `{current_time}`"
         ]
