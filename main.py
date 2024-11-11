@@ -182,21 +182,23 @@ async def callback_query(client, callback_query: CallbackQuery):
 async def caption_command(client, message):
     try:
         # Extract movie name from command
-        movie_name = " ".join(message.text.split()[1:])
-        
-        if not movie_name:
+        parts = message.text.split()
+        if len(parts) < 2:
             await message.reply_text(
                 "Please provide a movie name.\n"
                 "Example: `/caption Kalki 2898 AD`"
             )
             return
 
+        movie_name = " ".join(parts[1:-1])
+        include_filename = "-f" in parts or "-filename" in parts
+
         # Show "Fetching movie details..." message
         status_message = await message.reply_text("Fetching movie details... Please wait!")
-        
+
         # Fetch movie data from OMDB
         movie_data = await fetch_movie_data(movie_name)
-        
+
         if not movie_data:
             await status_message.edit_text("Sorry, I couldn't find information for that movie. Please check the movie name and try again.")
             return
@@ -206,7 +208,7 @@ async def caption_command(client, message):
 
         # Download poster
         poster_data = await download_poster(movie_data['poster'])
-        
+
         if not poster_data:
             await status_message.edit_text("Sorry, couldn't fetch the movie poster. Please check movie name and try again.")
             return
@@ -233,9 +235,18 @@ async def caption_command(client, message):
             parse_mode=ParseMode.MARKDOWN
         )
 
+        # Add additional message if -f or -filename is present
+        if include_filename:
+            additional_message = f"`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2.mkv`"
+            await client.send_message(
+                chat_id=message.chat.id,
+                text=additional_message,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
         # Delete the status message
         await status_message.delete()
-        
+
         await logger.log_message(
             action="Caption Command",
             user_id=message.from_user.id,
@@ -247,7 +258,7 @@ async def caption_command(client, message):
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
         print(f"Caption command error: {str(e)}")
-        
+
         await logger.log_message(
             action="Caption Command Error",
             user_id=message.from_user.id,
