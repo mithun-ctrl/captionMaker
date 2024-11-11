@@ -273,7 +273,7 @@ async def start_bot():
         if espada.is_connected:  # Check if client is still connected before stopping
             await espada.stop()
     
-    restart.espada.run()
+    restart.app.run()
             
 if __name__ == "__main__":
     print("Bot is Starting...")

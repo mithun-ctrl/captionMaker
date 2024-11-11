@@ -10,9 +10,9 @@ OWNER_ID = int(os.getenv("OWNER_ID"))
 SUDO_ADMIN_IDS = [int(id) for id in os.getenv("SUDO_ADMIN_IDS", "").split(",")]
 
 # Initialize the Pyrogram client
-espada = Client("bot", api_id=os.getenv("API_ID"), api_hash=os.getenv("API_HASH"), bot_token=BOT_TOKEN)
+app = Client("bot", api_id=os.getenv("API_ID"), api_hash=os.getenv("API_HASH"), bot_token=BOT_TOKEN)
 
-@espada.on_message(filters.command("restart") & (filters.user(OWNER_ID) | filters.user(SUDO_ADMIN_IDS)))
+@app.on_message(filters.command("restart") & (filters.user(OWNER_ID) | filters.user(SUDO_ADMIN_IDS)))
 async def restart_bot(client, message):
     """
     Command handler to restart the bot.
@@ -27,4 +27,4 @@ async def restart_bot(client, message):
         await message.reply(f"Error restarting the bot: {str(e)}")
 
 if __name__ == "__main__":
-    espada.run()
+    app.run()
