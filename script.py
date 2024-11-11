@@ -9,7 +9,7 @@ ABOUT_TEXT = """
     ├ ɴᴀᴍᴇ:  ᴛɪᴇʀ ʜᴀʀʀɪʙᴇʟ‌
     ├ ʀᴀɴᴋ: ᴇsᴘᴀᴅᴀ ɴᴏ.𝟹
     ├ ʟᴀɴɢᴜᴀɢᴇ: <a href=https://www.python.org>ᴘʏᴛʜᴏɴ</a>
-    ├ ʟɪʙʀᴀʀʏ: <a href=https://pytba.readthedocs.io/en/latest>ᴘʏʀᴏɢʀᴀᴍ</a>
+    ├ ʟɪʙʀᴀʀʏ: <a href=https://docs.pyrogram.org>ᴘʏʀᴏɢʀᴀᴍ</a>
     └ ᴄʀᴇᴀᴛᴏʀ: <a href=https://t.me/mithun_naam_toh_suna_hoga>ᴍɪᴛʜᴜɴ</a>"""
 
 HELP_TEXT = f"""🔍 **Available Commands:**
@@ -26,4 +26,4 @@ SUPPORT_TEXT = """
     **ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ғᴏʀ ᴜᴘᴅᴀᴛᴇs:**
 
     ├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/espada_org>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
-    ├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href https://t.me/espadaSupport>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>"""
+    ├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href=https://t.me/espadaSupport>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>"""

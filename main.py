@@ -69,7 +69,7 @@ async def download_poster(poster_url):
 def format_caption(movie, year, audio, genre, synopsis):
     """Format the caption with Markdown"""
     caption = f""" {movie} （{year}）
-» 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub） 
+» 𝗔𝘂𝗱𝗶𝗼: {audio}
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
@@ -80,6 +80,9 @@ def format_caption(movie, year, audio, genre, synopsis):
 @espada.on_message(filters.command(["start"]))
 async def start_command(client, message):
     try:
+        # Send loading message
+        loading_message = await message.reply_text("Loading... Please wait ⌛")
+        
         # Attempt to download and send the start image
         start_image = await download_image("https://jpcdn.it/img/small/682f656e6957597eebce76a1b99ea9e4.jpg")
         if start_image:
@@ -103,6 +106,9 @@ async def start_command(client, message):
                 parse_mode=ParseMode.MARKDOWN
             )
 
+        # Delete the loading message
+        await loading_message.delete()
+
         # Log the start command with correct function call
         await logger.log_message(
             action="Start Command",
@@ -112,6 +118,12 @@ async def start_command(client, message):
         )
 
     except Exception as e:
+        # Try to delete loading message if it exists and there's an error
+        try:
+            await loading_message.delete()
+        except:
+            pass
+            
         # Send an error message to the user and log the error
         await message.reply_text("An error occurred. Please try again later.")
         print(f"Start command error: {str(e)}")
