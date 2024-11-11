@@ -254,7 +254,14 @@ async def start_bot():
         await espada.start()
         await logger.log_bot_start()
         print("Bot Started Successfully!")
-        await asyncio.sleep(3600)  # Keeps the bot running for prolonged time
+
+        # Keep the bot running indefinitely
+        while True:
+            # Check if the client is still connected every 10 seconds
+            if not espada.is_connected:
+                await espada.reconnect()
+            await asyncio.sleep(10)
+
     except Exception as e:
         print(f"Bot Crashed: {str(e)}")
         await logger.log_bot_crash(e)
