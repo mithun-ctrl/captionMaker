@@ -242,7 +242,7 @@ async def start_bot():
         await espada.start()
         await logger.log_bot_start()
         print("Bot Started Successfully!")
-        await asyncio.sleep(3600)  # Keeps the bot running for a prolonged time
+        await asyncio.sleep(3600)  # Keeps the bot running for prolonged time
     except Exception as e:
         print(f"Bot Crashed: {str(e)}")
         await logger.log_bot_crash(e)
