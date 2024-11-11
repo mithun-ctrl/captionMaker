@@ -52,6 +52,7 @@ async def fetch_movie_data(movie_name):
                     'movie_p': data.get('Title', movie_name),
                     'year_p': data.get('Year', 'N/A'),
                     'genre_p': data.get('Genre', 'N/A'),
+                    'imdbRating_p': data.get('imdbRating', 'N/A'),
                     'synopsis_p': data.get('Plot', 'N/A'),
                     'audio_p': data.get('Language', 'N/A'),
                     'poster': data.get('Poster', None)
@@ -67,13 +68,14 @@ async def download_poster(poster_url):
                     return await response.read()
     return None
 
-def format_caption(movie, year, audio, genre, synopsis):
+def format_caption(movie, year, audio, genre, imdbRating, synopsis):
     """Format the caption with Markdown"""
     caption = f""" {movie}（{year}）
     
-» 𝗔𝘂𝗱𝗶𝗼: {audio}
-» 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
+» 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub）
+» 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p |
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
+» 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdbRating}/10
 
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
 > {synopsis}
@@ -215,6 +217,7 @@ async def caption_command(client, message):
             movie_data['year_p'],
             movie_data['audio_p'],
             movie_data['genre_p'],
+            movie_data['imdbRating_p'],
             movie_data['synopsis_p']
         )
 
