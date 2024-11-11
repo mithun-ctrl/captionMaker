@@ -9,7 +9,7 @@ import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT
-import restart
+
 
 # Get environment variables
 api_id = int(os.getenv("API_ID"))
@@ -272,8 +272,6 @@ async def start_bot():
     finally:
         if espada.is_connected:  # Check if client is still connected before stopping
             await espada.stop()
-    
-    restart.app.run()
             
 if __name__ == "__main__":
     print("Bot is Starting...")
