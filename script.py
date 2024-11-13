@@ -23,7 +23,15 @@ HELP_TEXT = f"""🔍 **Available Commands:**
 𝟹. ɢᴇᴛ ʏᴏᴜʀ ᴘᴏsᴛᴇʀ ᴡɪᴛʜ ғᴏʀᴍᴀᴛᴛᴇᴅ ᴄᴀᴘᴛɪᴏɴ!"""
 
 SUPPORT_TEXT = """
-    **ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ғᴏʀ ᴜᴘᴅᴀᴛᴇs:**
+    ᴊᴏɪɴ ᴏᴜʀ ᴄʜᴀɴɴᴇʟs ғᴏʀ ᴜᴘᴅᴀᴛᴇs:
 
     ├ ᴍᴀɪɴ ᴄʜᴀɴɴᴇʟ:  <a href=https://t.me/espada_org>ᴇsᴘᴀᴅᴀ.ᴏʀɢ</a>
     ├ sᴜᴘᴘᴏʀᴛ ᴄʜᴀɴɴᴇʟ: <a href=https://t.me/espadaSupport>ᴇsᴘᴀᴅᴀ.ᴏʀɢ sᴜᴘᴘᴏʀᴛ</a>"""
+
+
+MOVIE_TEXT= f"""
+     🎥 ɢᴇᴛ ᴍᴏᴠɪᴇs-ᴀɴɪᴍᴇ ᴀᴄᴄᴇss 
+    ├ ᴍᴏᴠɪᴇ's ᴄʜᴀɴɴᴇʟ:  <a href="https://t.me/PirecyKings2">ᴘɪʀᴇᴄʏ ᴋɪɴɢs𝟸</a>
+    ├ ᴀɴɪᴍᴇ's ᴄʜᴀɴɴᴇʟ: <a href="https://t.me/Animeke14hai">ᴀɴɪᴍᴇ ᴋᴇ 𝟷𝟺</a>
+    ├ ᴍᴏᴠɪᴇ's ɢʀᴏᴜᴘ: <a href="https://t.me/pirecykingstalks">ᴘɪʀᴇᴄʏ ᴋɪɴɢs𝟸 ᴛᴀʟᴋ</a>
+    └ ᴀɴɪᴍᴇ's ɢʀᴏᴜᴘ: <a href="https://t.me/anime14talks">ᴀɴɪᴍᴇ ᴋᴇ 𝟷𝟺 ᴛᴀʟᴋ</a>"""

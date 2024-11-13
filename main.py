@@ -8,7 +8,7 @@ import asyncio
 import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
-from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT
+from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT,MOVIE_TEXT
 import time
 
 
@@ -32,7 +32,9 @@ start_keyboard = InlineKeyboardMarkup([
      InlineKeyboardButton("🤖 About", callback_data="about")
      ],
     [InlineKeyboardButton("💬 Support", callback_data="support"),
-     InlineKeyboardButton("ℹ️ Help", callback_data="help")]
+     InlineKeyboardButton("ℹ️ Help", callback_data="help")],
+    [InlineKeyboardButton("🍿 Movie-Anime", callback_data="movie")]
+    
 ])
 
 async def download_image(url):
@@ -175,6 +177,12 @@ async def callback_query(client, callback_query: CallbackQuery):
                 caption=SUPPORT_TEXT,
                 reply_markup=start_keyboard,
                 parse_mode=ParseMode.HTML
+            )
+        elif callback_query.data == "movie":
+            await callback_query.message.edit_caption(
+                 caption=MOVIE_TEXT,
+                 reply_markup=start_keyboard,
+                 parse_mode=ParseMode.HTML
             )
         
         await callback_query.answer()
