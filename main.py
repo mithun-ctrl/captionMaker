@@ -258,7 +258,7 @@ async def caption_command(client, message):
 
         # Add additional message if -db or -database is present
         if include_database:
-            additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2.mkv`
             
             `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
             await client.send_message(
@@ -284,6 +284,30 @@ async def caption_command(client, message):
 
         await logger.log_message(
             action="Caption Command Error",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            error=e
+        )
+
+@espada.on_message(~filters.command(["start", "caption"]) & ~filters.channel & ~filters.group)
+async def default_response(client, message):
+    try:
+        # Send a default message in response
+        await message.reply_text("⚠ Invaild command!")
+
+        # Log the default response
+        await logger.log_message(
+            action="Default Response",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+        )
+
+    except Exception as e:
+        print(f"Default response error: {str(e)}")
+        await logger.log_message(
+            action="Default Response Error",
             user_id=message.from_user.id,
             username=message.from_user.username,
             chat_id=message.chat.id,
