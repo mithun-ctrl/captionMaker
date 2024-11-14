@@ -88,6 +88,33 @@ def format_caption(movie, year, audio, genre, imdbRating, synopsis):
 >[𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
+def format_series_caption(movie, year, audio, genre, imdbRating, synopsis):
+    """Format the caption with Markdown"""
+    caption = f""" {movie} ({year})
+╭──────────────────────
+ ‣ 𝗧𝘆𝗽𝗲: 𝗦𝗲𝗿𝗶𝗲𝘀
+ ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: 𝟬𝟭-𝟬
+ ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 𝟬𝟭-𝟬8
+ ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdbRating}
+ ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 𝟰𝟴𝟬𝗽, 𝟳𝟮𝟬𝗽, 𝟭𝟬𝟴𝟬𝗽
+ ‣ 𝗔𝘂𝗱𝗶𝗼:  {audio} हिंदी
+├──────────────────────
+ ‣ 𝗚𝗲𝗻𝗿𝗲𝘀:{genre}
+╰──────────────────────
+┌────────────────────────
+│S1)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
+│
+│S1)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
+└────────────────────────
+│[Click Here To Access Files]
+└────────────────────────
+ ‣ @TeamXPirates
+> [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
+
+    return caption
+    
+
+
 @espada.on_message(filters.command(["start"]))
 async def start_command(client, message):
     try:
@@ -289,8 +316,111 @@ async def caption_command(client, message):
             chat_id=message.chat.id,
             error=e
         )
+@espada.on_message(filters.command(["series"]))
+async def series_command(client, message):
+    try:
+        # Extract movie name from command
+        parts = message.text.split()
+        if len(parts) < 2:
+            await message.reply_text(
+                "Please provide a movie name.\n"
+                "Example: `/caption Kalki 2898 AD`"
+            )
+            return
 
-@espada.on_message(~filters.command(["start", "caption"]) & ~filters.channel & ~filters.group)
+        series_name = " ".join(parts[1:-1])
+        include_filename = "-f" in parts or "-filename" in parts
+        include_database = "-fdb" in parts or "-filenamedb" in parts
+
+        # Show "Fetching movie details..." message
+        status_message = await message.reply_text("Fetching series details... Please wait!")
+
+        # Fetch movie data from OMDB
+        series_data = await fetch_movie_data(series_name)
+
+        if not series_data:
+            await status_message.edit_text("Sorry, I couldn't find information for that series. Please check the series name and try again.")
+            return
+
+        # Update status message
+        await status_message.edit_text("Downloading poster...")
+
+        # Download poster
+        poster_data = await download_poster(series_data['poster'])
+
+        if not poster_data:
+            await status_message.edit_text("Sorry, couldn't fetch the series poster. Please check series name and try again.")
+            return
+
+        # Format caption
+        caption = format_series_caption(
+            series_data['movie_p'],
+            series_data['year_p'],
+            series_data['audio_p'],
+            series_data['genre_p'],
+            series_data['imdbRating_p'],
+            series_data['synopsis_p']
+        )
+
+        # Prepare poster for sending
+        poster_stream = BytesIO(poster_data)
+        poster_stream.name = "poster.jpg"
+
+        # Send poster with caption
+        await client.send_photo(
+            chat_id=message.chat.id,
+            photo=poster_stream,
+            caption=caption,
+            parse_mode=ParseMode.MARKDOWN
+        )
+
+        # Add additional message if -f or -filename is present
+        if include_filename:
+            additional_message = f"`[PirecyKings2] [Sseason Eepisode] {series_data['movie_p']} ({series_data['year_p']}) @pirecykings2`"
+            await client.send_message(
+                chat_id=message.chat.id,
+                text=additional_message,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # Add additional message if -db or -database is present
+        if include_database:
+            additional_message = f"""`[PirecyKings2] [Sseason Eepisode] {series_data['movie_p']} ({series_data['year_p']}) @pirecykings2`
+            
+            `S01 English - Hindi [480p]`
+            
+            `S01 English - Hindi [720p]`
+            
+            `S01 English - Hindi [1080p]`"""
+            await client.send_message(
+                chat_id=message.chat.id,
+                text=additional_message,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # Delete the status message
+        await status_message.delete()
+
+        await logger.log_message(
+            action="Series Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            chat_title=f"Movie: {series_data['movie_p']}"
+        )
+
+    except Exception as e:
+        await message.reply_text("An error occurred while processing your request. Please try again later.")
+        print(f"Caption command error: {str(e)}")
+
+        await logger.log_message(
+            action="Caption Command Error",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id,
+            error=e
+        )
+@espada.on_message(~filters.command(["start", "caption", "series"]) & ~filters.channel & ~filters.group)
 async def default_response(client, message):
     try:
         # Send a default message in response
