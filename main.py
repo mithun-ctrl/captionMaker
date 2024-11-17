@@ -82,11 +82,11 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
     try:
         # Extract the number from the "Runtime" string (e.g., "57 min")
         minutes = int(runTime.split()[0])  # Get the numeric part
-        if runTime > 60:
+        if minutes > 60:
             hours = minutes // 60
             remaining_minutes = minutes % 60
             formatted_runtime = f"{hours}h {remaining_minutes}min"
-        elif runTime==60:
+        elif minutes==60:
             hours = minutes // 60
             formatted_runtime = f"{hours}h"
         else:
