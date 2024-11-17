@@ -78,6 +78,17 @@ async def download_poster(poster_url):
 
 def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synopsis):
     """Format the caption with Markdown"""
+    
+    try:
+        # Extract the number from the "Runtime" string (e.g., "57 min")
+        minutes = int(runTime.split()[0])  # Get the numeric part
+        hours = minutes // 60
+        remaining_minutes = minutes % 60
+        formatted_runtime = f"{hours}h {remaining_minutes}m" if hours > 0 else f"{remaining_minutes}m"
+    except (ValueError, IndexError):
+        formatted_runtime = runTime  # Use the raw value if parsing fails
+    
+    
     caption = f""" {movie}（{year}）
     
 » 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub）
