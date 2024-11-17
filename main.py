@@ -107,6 +107,12 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
 
 def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, type, synopsis):
     """Format the caption with Markdown"""
+    
+    season_count = ""
+    for season in range(1, totalSeason+1):
+        season_count += f"│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n"
+    
+    
     caption = f""" {movie} ({year})
 ╭──────────────────────
  ‣ 𝗧𝘆𝗽𝗲: {type}
@@ -119,9 +125,7 @@ def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, ty
  ‣ 𝗚𝗲𝗻𝗿𝗲𝘀:{genre}
 ╰──────────────────────
 ┌────────────────────────
-│S1)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
-│
-│S2)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
+{season_count}
 └────────────────────────
 │[Click Here To Access Files]
 └────────────────────────
