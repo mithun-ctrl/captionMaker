@@ -82,9 +82,15 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
     try:
         # Extract the number from the "Runtime" string (e.g., "57 min")
         minutes = int(runTime.split()[0])  # Get the numeric part
-        hours = minutes // 60
-        remaining_minutes = minutes % 60
-        formatted_runtime = f"{hours}h {remaining_minutes}m" if hours > 0 else f"{remaining_minutes}m"
+        if runTime > 60:
+            hours = minutes // 60
+            remaining_minutes = minutes % 60
+            formatted_runtime = f"{hours}h {remaining_minutes}min"
+        elif runTime==60:
+            hours = minutes // 60
+            formatted_runtime = f"{hours}h"
+        else:
+            formatted_runtime = runTime
     except (ValueError, IndexError):
         formatted_runtime = runTime  # Use the raw value if parsing fails
     
@@ -95,7 +101,7 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p |
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
 » 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdbRating}/10
-» 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {runTime}
+» 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {formatted_runtime}
 » 𝗥𝗮𝘁𝗲𝗱: {rated}
 
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
@@ -108,11 +114,14 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
 def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, type, synopsis):
     """Format the caption with Markdown"""
     
-    totalSeason = int(totalSeason)
-    season_count = ""
-    for season in range(1, totalSeason+1):
-        season_count += f"│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n\n"
-    
+    try:
+        totalSeason = int(totalSeason)
+        season_count = ""
+        for season in range(1, totalSeason+1):
+            season_count += f"│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n\n"
+    except ValueError:
+        totalSeason = 'N/A'
+        
     
     caption = f""" {movie} ({year})
 ╭──────────────────────
