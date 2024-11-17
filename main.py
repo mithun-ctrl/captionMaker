@@ -57,7 +57,11 @@ async def fetch_movie_data(movie_name):
                     'year_p': data.get('Year', 'N/A'),
                     'genre_p': data.get('Genre', 'N/A'),
                     'imdbRating_p': data.get('imdbRating', 'N/A'),
+                    'runTime_p': data.get('Runtime', 'N/A'),
+                    'rated_p': data.get('Rated', 'N/A'),
                     'synopsis_p': data.get('Plot', 'N/A'),
+                    'totalSeasons_p': data.get('totalSeasons', 'N/A'),
+                    'type_p': data.get('Type', 'N/A'),
                     'audio_p': data.get('Language', 'N/A'),
                     'poster': data.get('Poster', None)
                 }
@@ -72,7 +76,7 @@ async def download_poster(poster_url):
                     return await response.read()
     return None
 
-def format_caption(movie, year, audio, genre, imdbRating, synopsis):
+def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synopsis):
     """Format the caption with Markdown"""
     caption = f""" {movie}（{year}）
     
@@ -80,6 +84,8 @@ def format_caption(movie, year, audio, genre, imdbRating, synopsis):
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p |
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
 » 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdbRating}/10
+» 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {runTime}
+» 𝗥𝗮𝘁𝗲𝗱: {rated}
 
 » 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
 > {synopsis}
@@ -88,14 +94,14 @@ def format_caption(movie, year, audio, genre, imdbRating, synopsis):
 >[𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
-def format_series_caption(movie, year, audio, genre, imdbRating, synopsis):
+def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, type, synopsis):
     """Format the caption with Markdown"""
     caption = f""" {movie} ({year})
 ╭──────────────────────
- ‣ 𝗧𝘆𝗽𝗲: 𝗦𝗲𝗿𝗶𝗲𝘀
- ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: 𝟬𝟭-𝟬
+ ‣ 𝗧𝘆𝗽𝗲: {type}
+ ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: {totalSeason}
  ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 𝟬𝟭-𝟬8
- ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdbRating}
+ ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdbRating}/10
  ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 𝟰𝟴𝟬𝗽, 𝟳𝟮𝟬𝗽, 𝟭𝟬𝟴𝟬𝗽
  ‣ 𝗔𝘂𝗱𝗶𝗼:  {audio} हिंदी
 ├──────────────────────
@@ -104,7 +110,7 @@ def format_series_caption(movie, year, audio, genre, imdbRating, synopsis):
 ┌────────────────────────
 │S1)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
 │
-│S1)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
+│S2)  [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]
 └────────────────────────
 │[Click Here To Access Files]
 └────────────────────────
@@ -259,6 +265,8 @@ async def caption_command(client, message):
             movie_data['audio_p'],
             movie_data['genre_p'],
             movie_data['imdbRating_p'],
+            movie_data['runTime_p'],
+            movie_data['rated_p'],
             movie_data['synopsis_p']
         )
 
@@ -359,6 +367,8 @@ async def series_command(client, message):
             series_data['audio_p'],
             series_data['genre_p'],
             series_data['imdbRating_p'],
+            series_data['totalSeasons_p'],
+            series_data['type_p'],
             series_data['synopsis_p']
         )
 
