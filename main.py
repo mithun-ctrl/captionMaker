@@ -222,11 +222,6 @@ async def generate_random_movie_poster(client):
                         movie_data['synopsis_p']
                     )
                     
-                    await client.send_message(
-                        chat_id=target_channel,
-                        text=additional_message,
-                        parse_mode=ParseMode.MARKDOWN
-                    )
                 
                 # Download poster
                 poster_data = await download_poster(movie_data['poster'])
@@ -244,9 +239,10 @@ async def generate_random_movie_poster(client):
                         parse_mode=ParseMode.MARKDOWN
                     )
                 if movie_data.get('type_p')=='series':
+                    
                     await client.send_message(
                         chat_id=target_channel,
-                        text=additional_message_S
+                        text=additional_message_S,
                         parse_mode=ParseMode.MARKDOWN
                     )
                 else:
