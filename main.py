@@ -613,7 +613,7 @@ async def series_command(client, message):
             chat_id=message.chat.id,
             error=e
         )
-@espada.on_message(~filters.command(["start", "caption", "series"]) & ~filters.channel & ~filters.group)
+@espada.on_message(~filters.command(["start", "movie", "series"]) & ~filters.channel & ~filters.group)
 async def default_response(client, message):
     try:
         # Send a default message in response
