@@ -198,6 +198,18 @@ async def generate_random_movie_poster(client):
                         movie_data['type_p'],
                         movie_data['synopsis_p']
                     )
+                    additional_message = f"""`[PirecyKings2] [Sseason Eepisode] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            
+                    `S01 English - Hindi [480p]`
+            
+                    `S01 English - Hindi [720p]`
+            
+                    `S01 English - Hindi [1080p]`"""
+                    await client.send_message(
+                        chat_id=target_channel,
+                        text=additional_message,
+                        parse_mode=ParseMode.MARKDOWN
+                    )
                 else:
                     caption = format_caption(
                         movie_data['movie_p'],
@@ -208,6 +220,14 @@ async def generate_random_movie_poster(client):
                         movie_data['runTime_p'],
                         movie_data['rated_p'],
                         movie_data['synopsis_p']
+                    )
+                    additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            
+                    `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
+                    await client.send_message(
+                        chat_id=target_channel,
+                        text=additional_message,
+                        parse_mode=ParseMode.MARKDOWN
                     )
                 
                 # Download poster
