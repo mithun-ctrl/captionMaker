@@ -155,6 +155,17 @@ async def generate_random_movie_poster(client):
     
     # Track previously generated movies to avoid repetition
     generated_movies = set()
+    
+    additional_message_S = f"""`[PirecyKings2] [Sseason Eepisode] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            
+                    `S01 English - Hindi [480p]`
+            
+                    `S01 English - Hindi [720p]`
+            
+                    `S01 English - Hindi [1080p]`"""
+    additional_message_M = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            
+                    `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
 
     while auto_generation_active:
         try:
@@ -233,25 +244,15 @@ async def generate_random_movie_poster(client):
                         parse_mode=ParseMode.MARKDOWN
                     )
                 if movie_data.get('type_p')=='series':
-                    additional_message = f"""`[PirecyKings2] [Sseason Eepisode] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
-            
-                    `S01 English - Hindi [480p]`
-            
-                    `S01 English - Hindi [720p]`
-            
-                    `S01 English - Hindi [1080p]`"""
                     await client.send_message(
                         chat_id=target_channel,
-                        text=additional_message,
+                        text=additional_message_S
                         parse_mode=ParseMode.MARKDOWN
                     )
                 else:
-                    additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
-            
-                    `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
                     await client.send_message(
                         chat_id=target_channel,
-                        text=additional_message,
+                        text=additional_message_M,
                         parse_mode=ParseMode.MARKDOWN
                     )
             
