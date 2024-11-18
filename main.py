@@ -155,17 +155,27 @@ auto_generation_active = False
 auto_generation_task = None
 
 async def fetch_random_movies():
-    """Fetch a list of random movies from TMDB, excluding previously generated"""
+    """Fetch a list of random movies from OMDB, excluding previously generated"""
+    keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
+    random_keyword = random.choice(keywords)  # Pick a random keyword for search
+
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"https://api.themoviedb.org/3/movie/popular?api_key={YOUR_TMDB_API_KEY}&language=en-US&page=1") as response:
+            async with session.get(f"http://www.omdbapi.com/?apikey={omdb_api_key}&s={random_keyword}&type=movie") as response:
                 if response.status == 200:
                     data = await response.json()
-                    movies = [
-                        movie['title'] for movie in data.get('results', [])
-                        if not await is_movie_already_generated(movie['title'])
-                    ]
-                    return movies[:20]  # Limit to top 20 unique movies
+                    if data.get("Response") == "True":
+                        movies = [
+                            movie['Title'] for movie in data.get('Search', [])
+                            if not await is_movie_already_generated(movie['Title'])
+                        ]
+                        return movies[:20]  # Limit to top 20 unique movies
+                    else:
+                        print(f"No results found for keyword: {random_keyword}")
+                        return []
+                else:
+                    print(f"Failed to fetch movies: {response.status}")
+                    return []
     except Exception as e:
         print(f"Error fetching movies: {e}")
         return []
