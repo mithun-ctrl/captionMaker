@@ -152,6 +152,9 @@ async def generate_random_movie_poster(client):
         client (Client): Pyrogram client instance
     """
     global auto_generation_active
+    
+    # Track previously generated movies to avoid repetition
+    generated_movies = set()
 
     while auto_generation_active:
         try:
@@ -165,8 +168,19 @@ async def generate_random_movie_poster(client):
                     "Dune", "Blade Runner 2049"
                 ]
             
+            # Filter out previously generated movies
+            available_movies = [movie for movie in movies if movie not in generated_movies]
+            
+            # If all movies have been generated, reset the set
+            if not available_movies:
+                generated_movies.clear()
+                available_movies = movies
+            
             # Select a random movie
-            movie_name = random.choice(movies)
+            movie_name = random.choice(available_movies)
+            
+            # Add the selected movie to generated movies
+            generated_movies.add(movie_name)
             
             # Fetch movie data from OMDB
             movie_data = await fetch_movie_data(movie_name)
