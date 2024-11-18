@@ -10,6 +10,7 @@ from io import BytesIO
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT,MOVIE_TEXT
 from fetchMovieData import fetch_movie_data, omdb_api_key
+import random
 
 
 # Get environment variables
@@ -123,7 +124,93 @@ def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, ty
 > [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
 
     return caption
+
+async def fetch_random_movies():
+    """Fetch a list of random movies from an external API"""
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get("https://api.themoviedb.org/3/movie/popular?api_key=YOUR_TMDB_API_KEY&language=en-US&page=1") as response:
+                if response.status == 200:
+                    data = await response.json()
+                    movies = [movie['title'] for movie in data.get('results', [])]
+                    return movies
+    except Exception as e:
+        print(f"Error fetching movies: {e}")
+        return []
+
+async def generate_random_movie_poster(client):
+    """
+    Generate and send a random movie poster with caption
     
+    Args:
+        client (Client): Pyrogram client instance
+    """
+    while True:
+        try:
+            # Fetch random movies from API
+            movies = await fetch_random_movies()
+            
+            if not movies:
+                # Fallback to a predefined list if API fails
+                movies = [
+                    "Inception", "Interstellar", "The Matrix", 
+                    "Dune", "Blade Runner 2049"
+                ]
+            
+            # Select a random movie
+            movie_name = random.choice(movies)
+            
+            # Fetch movie data from OMDB
+            movie_data = await fetch_movie_data(movie_name)
+            
+            if movie_data:
+                # Determine caption based on type (movie or series)
+                if movie_data.get('type_p') == 'series':
+                    caption = format_series_caption(
+                        movie_data['movie_p'],
+                        movie_data['year_p'],
+                        movie_data['audio_p'],
+                        movie_data['genre_p'],
+                        movie_data['imdbRating_p'],
+                        movie_data['totalSeasons_p'],
+                        movie_data['type_p'],
+                        movie_data['synopsis_p']
+                    )
+                else:
+                    caption = format_caption(
+                        movie_data['movie_p'],
+                        movie_data['year_p'],
+                        movie_data['audio_p'],
+                        movie_data['genre_p'],
+                        movie_data['imdbRating_p'],
+                        movie_data['runTime_p'],
+                        movie_data['rated_p'],
+                        movie_data['synopsis_p']
+                    )
+                
+                # Download poster
+                poster_data = await download_poster(movie_data['poster'])
+                
+                if poster_data:
+                    # Prepare poster for sending
+                    poster_stream = BytesIO(poster_data)
+                    poster_stream.name = "poster.jpg"
+                    
+                    # Send poster with caption 
+                    await client.send_photo(
+                        chat_id=log_channel,
+                        photo=poster_stream,
+                        caption=caption,
+                        parse_mode=ParseMode.MARKDOWN
+                    )
+            
+            # Wait for 1 minute before next poster
+            await asyncio.sleep(60)
+            
+        except Exception as e:
+            print(f"Random poster generation error: {str(e)}")
+            # Wait 1 minute even if there's an error
+            await asyncio.sleep(60)
 
 
 @espada.on_message(filters.command(["start"]))
@@ -466,6 +553,7 @@ async def start_bot():
         await logger.log_bot_start()
         print("Bot Started Successfully!")
 
+        asyncio.create_task(generate_random_movie_poster(espada))
         # Keep the bot running indefinitely
         while True:
             # Check if the client is still connected every 10 seconds
