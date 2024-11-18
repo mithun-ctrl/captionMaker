@@ -114,9 +114,10 @@ def format_caption(movie, year, audio, genre, imdbRating, runTime, rated, synops
 def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, type, synopsis):
     """Format the caption with Markdown"""
     
+    season_count = ""
+    
     try:
         totalSeason = int(totalSeason)
-        season_count = 0
         for season in range(1, totalSeason+1):
             season_count += f"│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n\n"
     except ValueError:
@@ -255,7 +256,7 @@ async def caption_command(client, message):
         if len(parts) < 2:
             await message.reply_text(
                 "Please provide a movie name.\n"
-                "Example: `/caption Kalki 2898 AD`"
+                "Example: `/caption The Penguin`"
             )
             return
 
@@ -446,10 +447,10 @@ async def series_command(client, message):
 
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
-        print(f"Caption command error: {str(e)}")
+        print(f"Series command error: {str(e)}")
 
         await logger.log_message(
-            action="Caption Command Error",
+            action="Series Command Error",
             user_id=message.from_user.id,
             username=message.from_user.username,
             chat_id=message.chat.id,
