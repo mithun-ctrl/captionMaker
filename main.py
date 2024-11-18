@@ -116,7 +116,7 @@ def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, ty
     
     try:
         totalSeason = int(totalSeason)
-        season_count = ""
+        season_count = 0
         for season in range(1, totalSeason+1):
             season_count += f"│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n\n"
     except ValueError:
