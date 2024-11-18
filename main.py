@@ -405,7 +405,7 @@ async def callback_query(client, callback_query: CallbackQuery):
     except Exception as e:
         print(f"Callback query error: {str(e)}")
 
-@espada.on_message(filters.command(["caption"]))
+@espada.on_message(filters.command(["movie"]))
 async def caption_command(client, message):
     try:
         # Extract movie name from command
