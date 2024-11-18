@@ -69,7 +69,7 @@ async def record_generated_movie(movie_title, movie_data):
     """Record a generated movie in the database"""
     await generated_movies_collection.insert_one({
         "movie_title": movie_title,
-        "generated_at": datetime.utcnow(),
+        "generated_at": datetime.datetime.now(datetime.timezone.utc),
         "movie_data": movie_data
     })
 
