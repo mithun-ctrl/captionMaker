@@ -18,7 +18,7 @@ async def fetch_movie_data(movie_name):
                     'genre_p': data.get('Genre', 'N/A'),
                     'imdbRating_p': data.get('imdbRating', 'N/A'),
                     'runTime_p': data.get('Runtime', 'N/A'),
-                    'rated_p': data.get('Rated', 'N/A'),
+                    'rated_p': data.get('Rated', 'U/A'),
                     'synopsis_p': data.get('Plot', 'N/A'),
                     'totalSeasons_p': data.get('totalSeasons', 'N/A'),
                     'type_p': data.get('Type', 'N/A'),
