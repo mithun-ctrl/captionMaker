@@ -405,7 +405,7 @@ async def callback_query(client, callback_query: CallbackQuery):
     except Exception as e:
         print(f"Callback query error: {str(e)}")
 
-@espada.on_message(filters.command(["movie"]))
+@espada.on_message(filters.command(["caption"]))
 async def caption_command(client, message):
     try:
         # Extract movie name from command
@@ -613,7 +613,7 @@ async def series_command(client, message):
             chat_id=message.chat.id,
             error=e
         )
-@espada.on_message(~filters.command(["start", "movie", "series"]) & ~filters.channel & ~filters.group)
+@espada.on_message(~filters.command(["start", "caption", "series"]) & ~filters.channel & ~filters.group)
 async def default_response(client, message):
     try:
         # Send a default message in response
