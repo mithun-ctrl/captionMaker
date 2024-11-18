@@ -125,6 +125,9 @@ def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, ty
 
     return caption
 
+auto_generation_active = False
+auto_generation_task = None
+
 async def fetch_random_movies():
     """Fetch a list of random movies from an external API"""
     try:
@@ -145,7 +148,11 @@ async def generate_random_movie_poster(client):
     Args:
         client (Client): Pyrogram client instance
     """
-    while True:
+    global auto_generation_active
+    # Specific channel ID you provided
+    target_channel = -1002160580518
+
+    while auto_generation_active:
         try:
             # Fetch random movies from API
             movies = await fetch_random_movies()
@@ -196,9 +203,9 @@ async def generate_random_movie_poster(client):
                     poster_stream = BytesIO(poster_data)
                     poster_stream.name = "poster.jpg"
                     
-                    # Send poster with caption 
+                    # Send poster with caption to the specific channel
                     await client.send_photo(
-                        chat_id=log_channel,
+                        chat_id=target_channel,
                         photo=poster_stream,
                         caption=caption,
                         parse_mode=ParseMode.MARKDOWN
@@ -211,6 +218,29 @@ async def generate_random_movie_poster(client):
             print(f"Random poster generation error: {str(e)}")
             # Wait 1 minute even if there's an error
             await asyncio.sleep(60)
+
+@espada.on_message(filters.command(["startautogen"]))
+async def start_auto_generation(client, message):
+    global auto_generation_active, auto_generation_task
+    
+    if not auto_generation_active:
+        auto_generation_active = True
+        auto_generation_task = asyncio.create_task(generate_random_movie_poster(client))
+        await message.reply_text("Auto movie poster generation started!")
+    else:
+        await message.reply_text("Auto movie poster generation is already running.")
+
+@espada.on_message(filters.command(["stopautogen"]))
+async def stop_auto_generation(client, message):
+    global auto_generation_active, auto_generation_task
+    
+    if auto_generation_active:
+        auto_generation_active = False
+        if auto_generation_task:
+            auto_generation_task.cancel()
+        await message.reply_text("Auto movie poster generation stopped!")
+    else:
+        await message.reply_text("Auto movie poster generation is not running.")
 
 
 @espada.on_message(filters.command(["start"]))
