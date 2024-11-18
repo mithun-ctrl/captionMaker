@@ -11,7 +11,9 @@ from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT,MOVIE_TEXT
 from fetchMovieData import fetch_movie_data, omdb_api_key
 import random
-
+import motor.motor_asyncio
+from pymongo import MongoClient
+import datetime
 
 # Get environment variables
 api_id = int(os.getenv("API_ID"))
@@ -19,7 +21,17 @@ api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 log_channel = int(os.getenv('LOG_CHANNEL'))
 target_channel = int(os.getenv('TARGET_CHANNEL'))
-YOUR_TMDB_API_KEY= os.getenv("YOUR_TMDB_API_KEY")
+tmdb_api_key= os.getenv("YOUR_TMDB_API_KEY")
+mongo_uri = os.getenv("MONGO_URI")
+
+YOUR_TMDB_API_KEY = tmdb_api_key
+MONGO_URI = mongo_uri
+DATABASE_NAME = "movie_bot_db"
+GENERATED_MOVIES_COLLECTION = "generated_movies"
+
+mongo_client = motor.motor_asyncio.AsyncIOMotorClient(MONGO_URI)
+db = mongo_client[DATABASE_NAME]
+generated_movies_collection = db[GENERATED_MOVIES_COLLECTION]
 
 if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
@@ -48,7 +60,18 @@ async def download_image(url):
                 return await response.read()
     return None
 
+async def is_movie_already_generated(movie_title):
+    """Check if a movie has been previously generated"""
+    existing_movie = await generated_movies_collection.find_one({"movie_title": movie_title})
+    return existing_movie is not None
 
+async def record_generated_movie(movie_title, movie_data):
+    """Record a generated movie in the database"""
+    await generated_movies_collection.insert_one({
+        "movie_title": movie_title,
+        "generated_at": datetime.utcnow(),
+        "movie_data": movie_data
+    })
 
 async def download_poster(poster_url):
     """Download movie poster from URL"""
@@ -132,14 +155,17 @@ auto_generation_active = False
 auto_generation_task = None
 
 async def fetch_random_movies():
-    """Fetch a list of random movies from an external API"""
+    """Fetch a list of random movies from TMDB, excluding previously generated"""
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(f"https://api.themoviedb.org/3/movie/popular?api_key={YOUR_TMDB_API_KEY}&language=en-US&page=1") as response:
                 if response.status == 200:
                     data = await response.json()
-                    movies = [movie['title'] for movie in data.get('results', [])]
-                    return movies
+                    movies = [
+                        movie['title'] for movie in data.get('results', [])
+                        if not await is_movie_already_generated(movie['title'])
+                    ]
+                    return movies[:20]  # Limit to top 20 unique movies
     except Exception as e:
         print(f"Error fetching movies: {e}")
         return []
@@ -152,9 +178,6 @@ async def generate_random_movie_poster(client):
         client (Client): Pyrogram client instance
     """
     global auto_generation_active
-    
-    # Track previously generated movies to avoid repetition
-    generated_movies = set()
 
     while auto_generation_active:
         try:
@@ -167,26 +190,25 @@ async def generate_random_movie_poster(client):
                     "Inception", "Interstellar", "The Matrix", 
                     "Dune", "Blade Runner 2049"
                 ]
-            
-            # Filter out previously generated movies
-            available_movies = [movie for movie in movies if movie not in generated_movies]
-            
-            # If all movies have been generated, reset the set
-            if not available_movies:
-                generated_movies.clear()
-                available_movies = movies
+                movies = [
+                    movie for movie in movies 
+                    if not await is_movie_already_generated(movie)
+                ]
+            if not movies:
+                await asyncio.sleep(60)  # Wait if no new movies
+                continue
             
             # Select a random movie
-            movie_name = random.choice(available_movies)
-            
-            # Add the selected movie to generated movies
-            generated_movies.add(movie_name)
+            movie_name = random.choice(movies)
             
             # Fetch movie data from OMDB
             movie_data = await fetch_movie_data(movie_name)
             
             if movie_data:
-                # Determine caption based on type (movie or series)
+                
+                # Record the generated movie
+                await record_generated_movie(movie_name, movie_data)
+                
                 if movie_data.get('type_p') == 'series':
                     caption = format_series_caption(
                         movie_data['movie_p'],
@@ -256,7 +278,6 @@ async def generate_random_movie_poster(client):
             
         except Exception as e:
             print(f"Random poster generation error: {str(e)}")
-            # Wait 1 minute even if there's an error
             await asyncio.sleep(60)
 
 @espada.on_message(filters.command(["startautogen"]))
