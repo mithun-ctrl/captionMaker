@@ -18,6 +18,9 @@ api_id = int(os.getenv("API_ID"))
 api_hash = os.getenv("API_HASH")
 bot_token = os.getenv("BOT_TOKEN")
 log_channel = int(os.getenv('LOG_CHANNEL'))
+target_channel = int(os.getenv('TARGET_CHANNEL'))
+YOUR_TMDB_API_KEY= os.getenv("YOUR_TMDB_API_KEY")
+
 if not all([api_id, api_hash, bot_token, omdb_api_key, log_channel]):
     raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, OMDB_API_KEY, and LOG_CHANNEL environment variables")
 
@@ -132,7 +135,7 @@ async def fetch_random_movies():
     """Fetch a list of random movies from an external API"""
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get("https://api.themoviedb.org/3/movie/popular?api_key=YOUR_TMDB_API_KEY&language=en-US&page=1") as response:
+            async with session.get(f"https://api.themoviedb.org/3/movie/popular?api_key={YOUR_TMDB_API_KEY}&language=en-US&page=1") as response:
                 if response.status == 200:
                     data = await response.json()
                     movies = [movie['title'] for movie in data.get('results', [])]
@@ -149,8 +152,6 @@ async def generate_random_movie_poster(client):
         client (Client): Pyrogram client instance
     """
     global auto_generation_active
-    # Specific channel ID you provided
-    target_channel = -1002160580518
 
     while auto_generation_active:
         try:
