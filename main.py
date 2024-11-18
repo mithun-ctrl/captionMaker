@@ -278,7 +278,23 @@ async def generate_random_movie_poster(client):
             
         except Exception as e:
             print(f"Random poster generation error: {str(e)}")
-            await asyncio.sleep(60)
+            # Log the error instead of just printing
+            if hasattr(logger, 'log_error'):
+                await logger.log_error(e)
+            if not auto_generation_active:
+                auto_generation_task = asyncio.create_task(generate_random_movie_poster(client))
+            await asyncio.sleep(60)  # Wait before retrying
+
+async def monitor_auto_generation(client):
+    global auto_generation_active, auto_generation_task
+    
+    while True:
+        if auto_generation_active and (auto_generation_task is None or auto_generation_task.done()):
+            print("Restarting auto-generation task")
+            auto_generation_task = asyncio.create_task(generate_random_movie_poster(client))
+        
+        await asyncio.sleep(300)
+
 
 @espada.on_message(filters.command(["startautogen"]))
 async def start_auto_generation(client, message):
