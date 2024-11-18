@@ -154,30 +154,31 @@ def format_series_caption(movie, year, audio, genre, imdbRating, totalSeason, ty
 auto_generation_active = False
 auto_generation_task = None
 
-async def fetch_random_movies():
-    """Fetch a list of random movies from OMDB, excluding previously generated"""
+async def fetch_random_movies_and_series():
+    """Fetch a list of random movies and series released after 2000 from OMDB"""
     keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
     random_keyword = random.choice(keywords)  # Pick a random keyword for search
 
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://www.omdbapi.com/?apikey={omdb_api_key}&s={random_keyword}&type=movie") as response:
+            async with session.get(f"http://www.omdbapi.com/?apikey={omdb_api_key}&s={random_keyword}") as response:
                 if response.status == 200:
                     data = await response.json()
                     if data.get("Response") == "True":
-                        movies = [
-                            movie['Title'] for movie in data.get('Search', [])
-                            if not await is_movie_already_generated(movie['Title'])
-                        ]
-                        return movies[:20]  # Limit to top 20 unique movies
+                        results = []
+                        for item in data.get('Search', []):
+                            year = item.get('Year', "")
+                            if not await is_movie_already_generated(item['Title']) and year.isdigit() and int(year) > 2000:
+                                results.append(item['Title'])
+                        return results[:20]  # Limit to top 20 unique items
                     else:
                         print(f"No results found for keyword: {random_keyword}")
                         return []
                 else:
-                    print(f"Failed to fetch movies: {response.status}")
+                    print(f"Failed to fetch data: {response.status}")
                     return []
     except Exception as e:
-        print(f"Error fetching movies: {e}")
+        print(f"Error fetching data: {e}")
         return []
 
 async def generate_random_movie_poster(client):
@@ -192,7 +193,7 @@ async def generate_random_movie_poster(client):
     while auto_generation_active:
         try:
             # Fetch random movies from API
-            movies = await fetch_random_movies()
+            movies = await fetch_random_movies_and_series()
             
             if not movies:
                 # Fallback to a predefined list if API fails
@@ -229,8 +230,7 @@ async def generate_random_movie_poster(client):
                         movie_data['totalSeasons_p'],
                         movie_data['type_p'],
                         movie_data['synopsis_p']
-                    )
-                    
+                    )                   
                 else:
                     caption = format_caption(
                         movie_data['movie_p'],
