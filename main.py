@@ -155,31 +155,35 @@ auto_generation_active = False
 auto_generation_task = None
 
 async def fetch_random_movies_and_series():
-    """Fetch a list of random movies and series released after 2000 from OMDB"""
+    """Fetch a list of random movies and series released after 2000 from IMDb Rapid API"""
     keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
     random_keyword = random.choice(keywords)  # Pick a random keyword for search
 
+    url = "https://imdb-top-100-movies.p.rapidapi.com/"
+    headers = {
+        "x-rapidapi-key": "55a64eed3cmsh549a490258f7e64p1dbbf4jsncf921a05a9ff",
+        "x-rapidapi-host": "imdb-top-100-movies.p.rapidapi.com"
+    }
+
     try:
         async with aiohttp.ClientSession() as session:
-            async with session.get(f"http://www.omdbapi.com/?apikey={omdb_api_key}&s={random_keyword}") as response:
+            async with session.get(url, headers=headers) as response:
                 if response.status == 200:
                     data = await response.json()
-                    if data.get("Response") == "True":
-                        results = []
-                        for item in data.get('Search', []):
-                            year = item.get('Year', "")
-                            if not await is_movie_already_generated(item['Title']) and year.isdigit() and int(year) > 2000:
-                                results.append(item['Title'])
-                        return results[:20]  # Limit to top 20 unique items
-                    else:
-                        print(f"No results found for keyword: {random_keyword}")
-                        return []
+                    results = []
+                    for item in data:  # Assuming the data is a list of movies
+                        title = item.get('title', "")
+                        year = item.get('year', 0)
+                        if not await is_movie_already_generated(title) and year > 2000:
+                            results.append(title)
+                    return results[:20]  # Limit to top 20 unique items
                 else:
                     print(f"Failed to fetch data: {response.status}")
                     return []
     except Exception as e:
         print(f"Error fetching data: {e}")
         return []
+
 
 async def generate_random_movie_poster(client):
     """
