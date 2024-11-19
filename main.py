@@ -156,10 +156,10 @@ auto_generation_task = None
 
 async def fetch_random_movies_and_series():
     """Fetch a list of random movies and series released after 2000 from IMDb Rapid API"""
-    url = "https://netflix-original-series-top-100-ranked.p.rapidapi.com/uMEJkR/series"
+    url = "https://imdb-top-1000-movies-series.p.rapidapi.com/list/1"
     headers = {
         "x-rapidapi-key": "55a64eed3cmsh549a490258f7e64p1dbbf4jsncf921a05a9ff",
-        "x-rapidapi-host": "netflix-original-series-top-100-ranked.p.rapidapi.com"
+        "x-rapidapi-host": "imdb-top-1000-movies-series.p.rapidapi.com"
     }
 
     try:
