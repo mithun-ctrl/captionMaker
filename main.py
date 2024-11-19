@@ -156,9 +156,6 @@ auto_generation_task = None
 
 async def fetch_random_movies_and_series():
     """Fetch a list of random movies and series released after 2000 from IMDb Rapid API"""
-    keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
-    random_keyword = random.choice(keywords)  # Pick a random keyword for search
-
     url = "https://imdb-top-100-movies.p.rapidapi.com/series/"
     headers = {
         "x-rapidapi-key": "55a64eed3cmsh549a490258f7e64p1dbbf4jsncf921a05a9ff",
@@ -173,7 +170,8 @@ async def fetch_random_movies_and_series():
                     results = []
                     for item in data:  # Assuming the data is a list of movies
                         title = item.get('title', "")
-                        if not await is_movie_already_generated(title):
+                        year = item.get('year', 0)
+                        if not await is_movie_already_generated(title) and year > 2000:
                             results.append(title)
                     return results[:20]  # Limit to top 20 unique items
                 else:
