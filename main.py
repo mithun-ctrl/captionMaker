@@ -173,8 +173,7 @@ async def fetch_random_movies_and_series():
                     results = []
                     for item in data:  # Assuming the data is a list of movies
                         title = item.get('title', "")
-                        year = item.get('year', 0)
-                        if not await is_movie_already_generated(title) and year > 2000:
+                        if not await is_movie_already_generated(title):
                             results.append(title)
                     return results[:20]  # Limit to top 20 unique items
                 else:
