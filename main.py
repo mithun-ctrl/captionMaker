@@ -158,33 +158,28 @@ auto_generation_active = False
 auto_generation_task = None
 
 async def fetch_random_movies_and_series():
-    """Fetch a list of random movies and series released after 2000 from IMDb Rapid API"""
-    keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
-    random_keyword = random.choice(keywords)  # Pick a random keyword for search
-
-    url = f"{rapid_url}"
+    """Fetch a list of top series from IMDb Rapid API"""
+    url = rapid_url
     headers = {
-        "x-rapidapi-key": f"{rapid_api}",
-        "x-rapidapi-host": f"{rapid_host}"
+        "x-rapidapi-key": rapid_api,
+        "x-rapidapi-host": rapid_host
     }
 
     try:
         async with aiohttp.ClientSession() as session:
             async with session.get(url, headers=headers) as response:
                 if response.status == 200:
-                    data = await response.json()
-                    results = []
-                    for item in data:  # Assuming the data is a list of movies
-                        title = item.get('title', "")
-                        if not await is_movie_already_generated(title):
-                            results.append(title)
+                    data = await response.json()  # Parse the response as JSON
+                    results = [item.get('title', "") for item in data if item.get('title')]
                     return results[:20]  # Limit to top 20 unique items
                 else:
                     print(f"Failed to fetch data: {response.status}")
+                    print(await response.text())  # Print error details for debugging
                     return []
     except Exception as e:
         print(f"Error fetching data: {e}")
         return []
+
 
 
 async def generate_random_movie_poster(client):
