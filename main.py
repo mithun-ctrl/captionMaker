@@ -285,7 +285,7 @@ async def generate_random_movie_poster(client):
                     )
             
             # Wait for 1 minute before next poster
-            await asyncio.sleep(60)
+            await asyncio.sleep(1200)
             
         except Exception as e:
             print(f"Random poster generation error: {str(e)}")
