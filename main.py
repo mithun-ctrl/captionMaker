@@ -159,7 +159,7 @@ async def fetch_random_movies_and_series():
     keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
     random_keyword = random.choice(keywords)  # Pick a random keyword for search
 
-    url = "https://imdb-top-100-movies.p.rapidapi.com/"
+    url = "https://imdb-top-100-movies.p.rapidapi.com/series/"
     headers = {
         "x-rapidapi-key": "55a64eed3cmsh549a490258f7e64p1dbbf4jsncf921a05a9ff",
         "x-rapidapi-host": "imdb-top-100-movies.p.rapidapi.com"
