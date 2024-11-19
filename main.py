@@ -23,6 +23,9 @@ log_channel = int(os.getenv('LOG_CHANNEL'))
 target_channel = int(os.getenv('TARGET_CHANNEL'))
 tmdb_api_key= os.getenv("YOUR_TMDB_API_KEY")
 mongo_uri = os.getenv("MONGO_URI")
+rapid_url = os.getenv("rapid_url")
+rapid_api = os.getenv("rapid_api")
+rapid_host = os.getenv("rapid_host") 
 
 YOUR_TMDB_API_KEY = tmdb_api_key
 MONGO_URI = mongo_uri
@@ -156,10 +159,13 @@ auto_generation_task = None
 
 async def fetch_random_movies_and_series():
     """Fetch a list of random movies and series released after 2000 from IMDb Rapid API"""
-    url = "https://list-of-movies1.p.rapidapi.com/movies/"
+    keywords = ["action", "comedy", "drama", "thriller", "horror", "romance", "sci-fi", "adventure"]
+    random_keyword = random.choice(keywords)  # Pick a random keyword for search
+
+    url = f"{rapid_url}"
     headers = {
-        "x-rapidapi-key": "55a64eed3cmsh549a490258f7e64p1dbbf4jsncf921a05a9ff",
-        "x-rapidapi-host": "list-of-movies1.p.rapidapi.com"
+        "x-rapidapi-key": f"{rapid_api}",
+        "x-rapidapi-host": f"{rapid_host}"
     }
 
     try:
@@ -170,7 +176,6 @@ async def fetch_random_movies_and_series():
                     results = []
                     for item in data:  # Assuming the data is a list of movies
                         title = item.get('title', "")
-                        year = item.get('year', 0)
                         if not await is_movie_already_generated(title):
                             results.append(title)
                     return results[:20]  # Limit to top 20 unique items
