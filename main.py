@@ -1,28 +1,17 @@
-from dotenv import load_dotenv
-load_dotenv()
-from pyrogram import Client, filters, utils
-from pyrogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto
+from pyrogram import filters
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto
 from pyrogram.enums import ParseMode
-import os
 import asyncio
 import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT,MOVIE_TEXT
 import random
-
-# Get environment variables
-api_id = int(os.getenv("API_ID"))
-api_hash = os.getenv("API_HASH")
-bot_token = os.getenv("BOT_TOKEN")
-log_channel = int(os.getenv('LOG_CHANNEL'))
-rapidapi_key = os.getenv("RAPID_API")
+from config import espada, api_hash, api_id, bot_token, rapidapi_key, log_channel
 
 if not all([api_id, api_hash, bot_token, rapidapi_key, log_channel]):
-    raise ValueError("Please set the API_ID, API_HASH, BOT_TOKEN, RAPID_API, and LOG_CHANNEL environment variables")
+    raise ValueError("Please set environment variables correctly")
 
-# Initialize the bot
-espada = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 logger = Logger(espada)
 
 RAPIDAPI_URL = "https://movie-database-alternative.p.rapidapi.com/"
@@ -81,7 +70,7 @@ def create_search_results_keyboard(results):
         text = f"{item['Title']} ({item['Year']})"
         callback_data = f"title_{item['imdbID']}"
         buttons.append([InlineKeyboardButton(text, callback_data=callback_data)])
-    buttons.append([InlineKeyboardButton("🔙 Back", callback_data="home")])
+    buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel_search")])
     return InlineKeyboardMarkup(buttons)
 
 async def download_image(url):
@@ -311,42 +300,76 @@ async def callback_query(client, callback_query: CallbackQuery):
             # Handle title selection
             imdb_id = callback_query.data.split("_")[1]
             await process_title_selection(callback_query, imdb_id)
+        
+        elif callback_query.data == "cancel_search":
+            await callback_query.message.delete()
             
         elif callback_query.data == "home":
-            await callback_query.message.edit_caption(
-                caption=START_TEXT,
-                reply_markup=start_keyboard,
-                parse_mode=ParseMode.MARKDOWN
-            )
+            # Check if the current caption is different from START_TEXT
+            current_caption = callback_query.message.caption or callback_query.message.text
+            if current_caption != START_TEXT:
+                await callback_query.message.edit_caption(
+                    caption=START_TEXT,
+                    reply_markup=start_keyboard,
+                    parse_mode=ParseMode.MARKDOWN
+                )
+            else:
+                # If already on home, just acknowledge the callback query
+                await callback_query.answer("Already on Home screen")
+        
         elif callback_query.data == "about":
-            await callback_query.message.edit_caption(
-                caption = ABOUT_TEXT,
-                reply_markup = start_keyboard,
-                parse_mode = ParseMode.HTML
-            )
+            # Similar approach for other buttons
+            current_caption = callback_query.message.caption or callback_query.message.text
+            if current_caption != ABOUT_TEXT:
+                await callback_query.message.edit_caption(
+                    caption=ABOUT_TEXT,
+                    reply_markup=start_keyboard,
+                    parse_mode=ParseMode.HTML
+                )
+            else:
+                await callback_query.answer("Already on About screen")
         
         elif callback_query.data == "help":
-            await callback_query.message.edit_caption(
-                caption=HELP_TEXT,
-                reply_markup=start_keyboard,
-                parse_mode=ParseMode.MARKDOWN
-            )
+            current_caption = callback_query.message.caption or callback_query.message.text
+            if current_caption != HELP_TEXT:
+                await callback_query.message.edit_caption(
+                    caption=HELP_TEXT,
+                    reply_markup=start_keyboard,
+                    parse_mode=ParseMode.MARKDOWN
+                )
+            else:
+                await callback_query.answer("Already on Help screen")
         
         elif callback_query.data == "support":
-            await callback_query.message.edit_caption(
-                caption=SUPPORT_TEXT,
-                reply_markup=start_keyboard,
-                parse_mode=ParseMode.HTML
-            )
+            current_caption = callback_query.message.caption or callback_query.message.text
+            if current_caption != SUPPORT_TEXT:
+                await callback_query.message.edit_caption(
+                    caption=SUPPORT_TEXT,
+                    reply_markup=start_keyboard,
+                    parse_mode=ParseMode.HTML
+                )
+            else:
+                await callback_query.answer("Already on Support screen")
+        
         elif callback_query.data == "movie":
-            await callback_query.message.edit_caption(
-                 caption=MOVIE_TEXT,
-                 reply_markup=start_keyboard,
-                 parse_mode=ParseMode.HTML
-            )
+            current_caption = callback_query.message.caption or callback_query.message.text
+            if current_caption != MOVIE_TEXT:
+                await callback_query.message.edit_caption(
+                    caption=MOVIE_TEXT,
+                    reply_markup=start_keyboard,
+                    parse_mode=ParseMode.HTML
+                )
+            else:
+                await callback_query.answer("Already on Movie screen")
+        
         await callback_query.answer()
+    
     except Exception as e:
         print(f"Callback query error: {str(e)}")
+        try:
+            await callback_query.answer("An error occurred. Please try again.")
+        except:
+            pass
 
 @espada.on_message(filters.command(["captionM", "cm"]))
 async def caption_command(client, message):
