@@ -5,73 +5,179 @@ import asyncio
 import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
-from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT,MOVIE_TEXT
+from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT, MOVIE_TEXT
 import random
-from config import espada, api_hash, api_id, bot_token, rapidapi_key, log_channel
+from config import espada, api_hash, api_id, bot_token, log_channel, api_token, omdb_api
 
-if not all([api_id, api_hash, bot_token, rapidapi_key, log_channel]):
+if not all([api_id, api_hash, bot_token, log_channel, api_token, api_token, omdb_api]):
     raise ValueError("Please set environment variables correctly")
 
 logger = Logger(espada)
+OMDB_API_KEY= omdb_api
 
-RAPIDAPI_URL = "https://movie-database-alternative.p.rapidapi.com/"
-RAPIDAPI_HEADERS = {
-    "x-rapidapi-key": rapidapi_key,
-    "x-rapidapi-host": "movie-database-alternative.p.rapidapi.com"
+TMDB_BASE_URL = "https://api.themoviedb.org/3"
+TMDB_API_KEY = api_token
+TMDB_HEADERS = {
+    "accept": "application/json",
+    "Authorization": f"Bearer {TMDB_API_KEY}"
 }
 
-# Define keyboard layouts
 start_keyboard = InlineKeyboardMarkup([
     [InlineKeyboardButton("🏠 Home", callback_data="home"),
-     InlineKeyboardButton("🤖 About", callback_data="about")
-     ],
+     InlineKeyboardButton("🤖 About", callback_data="about")],
     [InlineKeyboardButton("💬 Support", callback_data="support"),
      InlineKeyboardButton("ℹ️ Help", callback_data="help")],
-    [InlineKeyboardButton("🍿 Movie-Anime", callback_data="movie")]
-    
+    [InlineKeyboardButton("🎬 MoAni Hub", callback_data="movie_anime_hub"),
+     InlineKeyboardButton("🙅‍♂️ Close", callback_data="close")
+     ]
 ])
 
-async def search_titles(query, search_type="movie"):
-    """Search for movies/series using the Movie Database Alternative API"""
+async def get_imdb_rating(imdb_id):
+    """
+    Fetch IMDb rating using OMDB API
+    """
     try:
-        params = {
-            "s": query,
-            "r": "json",
-            "type": search_type
-        }
-        
+        if not imdb_id:
+            return 'N/A'
+            
+        url = f"http://www.omdbapi.com/?i={imdb_id}&apikey={OMDB_API_KEY}"
         async with aiohttp.ClientSession() as session:
-            async with session.get(RAPIDAPI_URL, headers=RAPIDAPI_HEADERS, params=params) as response:
-                data = await response.json()
-                return data.get('Search', []) if data.get('Response') == 'True' else []
+            async with session.get(url) as response:
+                if response.status == 200:
+                    data = await response.json()
+                    rating = data.get('imdbRating')
+                    return rating if rating and rating != 'N/A' else '0'
+                return '0'
     except Exception as e:
-        print(f"Search error: {str(e)}")
-        return []
+        print(f"Error fetching IMDb rating: {str(e)}")
+        return '0'
 
-async def get_title_details(imdb_id):
-    """Get detailed information for a specific title using its IMDb ID"""
+async def get_tmdb_data(endpoint, params=None):
+    """Generic function to fetch data from TMDB API"""
     try:
-        params = {
-            "r": "json",
-            "i": imdb_id
-        }
-        
+        url = f"{TMDB_BASE_URL}/{endpoint}"
+        params = params or {}
+        params['api_key'] = TMDB_API_KEY
         async with aiohttp.ClientSession() as session:
-            async with session.get(RAPIDAPI_URL, headers=RAPIDAPI_HEADERS, params=params) as response:
-                return await response.json()
+            async with session.get(url, headers=TMDB_HEADERS, params=params) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    print(f"TMDB API error: {response.status}")
+                    return None
     except Exception as e:
-        print(f"Details fetch error: {str(e)}")
+        print(f"TMDB API error: {str(e)}")
         return None
 
-def create_search_results_keyboard(results):
-    """Create inline keyboard from search results"""
+
+async def search_titles(query, media_type="movie", page=1):
+    """Search for movies/TV shows using TMDB API"""
+    params = {
+        "query": query,
+        "include_adult": "false",
+        "language": "en-US",
+        "page": page
+    }
+    
+    if media_type == "movie":
+        endpoint = "search/movie"
+    else:
+        endpoint = "search/tv"
+        
+    data = await get_tmdb_data(endpoint, params)
+    return data.get('results', []) if data else []
+
+async def get_title_details(tmdb_id, media_type="movie"):
+    """Get detailed information for a specific title"""
+    try:
+        endpoint = f"{media_type}/{tmdb_id}"
+        params = {
+            "language": "en-US",
+            "append_to_response": "credits,videos,images,external_ids"
+        }
+        
+        data = await get_tmdb_data(endpoint, params)
+        
+        if data:
+            # Get IMDb ID from external_ids
+            imdb_id = data.get('external_ids', {}).get('imdb_id')
+            if imdb_id:
+                # Fetch and add IMDb rating
+                imdb_rating = await get_imdb_rating(imdb_id)
+                data['imdb_rating'] = imdb_rating
+            else:
+                data['imdb_rating'] = '0'
+                
+        return data
+    except Exception as e:
+        print(f"Error getting title details: {str(e)}")
+        return None
+
+async def get_similar_titles(tmdb_id, media_type="movie"):
+    """Get similar movies/TV shows"""
+    endpoint = f"{media_type}/{tmdb_id}/similar"
+    params = {"page": 1}
+    return await get_tmdb_data(endpoint, params)
+
+async def get_images(tmdb_id, media_type="movie"):
+    """Get additional images for a title"""
+    endpoint = f"{media_type}/{tmdb_id}/images"
+    return await get_tmdb_data(endpoint)
+
+async def get_trending_content(media_type="all", time_window="week", page=1):
+    """Get trending movies/TV shows"""
+    endpoint = f"trending/{media_type}/{time_window}"
+    params = {"page": page}
+    return await get_tmdb_data(endpoint, params)
+
+async def get_popular_content(media_type="movie", page=1):
+    """Get popular movies/TV shows"""
+    endpoint = f"{media_type}/popular"
+    params = {"page": page}
+    return await get_tmdb_data(endpoint, params)
+
+async def get_upcoming_content(page=1):
+    """Get upcoming movies"""
+    endpoint = "movie/upcoming"
+    params = {"page": page}
+    return await get_tmdb_data(endpoint, params)
+
+def create_content_list_keyboard(results, page, total_pages, command_type):
+    """Create keyboard for content listings with pagination"""
     buttons = []
+    
+    # Add content buttons
     for item in results:
-        text = f"{item['Title']} ({item['Year']})"
-        callback_data = f"title_{item['imdbID']}"
+        title = item.get('title') or item.get('name')
+        release_date = item.get('release_date') or item.get('first_air_date', '')
+        year = release_date[:4] if release_date else 'N/A'
+        media_type = item.get('media_type', 'movie')
+        
+        text = f"{title} ({year})"
+        callback_data = f"title_{item['id']}_{media_type}"
         buttons.append([InlineKeyboardButton(text, callback_data=callback_data)])
+    
+    # Add pagination buttons
+    nav_buttons = []
+    if page > 1:
+        nav_buttons.append(InlineKeyboardButton(
+            "⬅️ Previous",
+            callback_data=f"{command_type}_page_{page-1}"
+        ))
+    if page < total_pages:
+        nav_buttons.append(InlineKeyboardButton(
+            "Next ➡️",
+            callback_data=f"{command_type}_page_{page+1}"
+        ))
+    
+    if nav_buttons:
+        buttons.append(nav_buttons)
+    
+    # Add home button
     buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel_search")])
+    
     return InlineKeyboardMarkup(buttons)
+
 
 async def download_image(url):
     """Download image from URL"""
@@ -101,7 +207,7 @@ def determine_audio(movie_details):
     """
     
     audio_options = [
-        'English',
+        'Hindi-English',
         'Hindi',
         'Multi-Audio',
         'Hindi Dubbed',
@@ -123,10 +229,10 @@ def determine_audio(movie_details):
     
     # Check for English content
     if 'usa' in country or 'uk' in country or 'english' in language:
-        return 'English'
+        return 'Hindi-English'
     
     if 'english' in actors or 'english' in plot:
-        return 'English'
+        return 'Hindi-English'
     
     # Default behavior for other cases
     if country and country not in ['usa', 'uk', 'india']:
@@ -139,7 +245,7 @@ def determine_audio(movie_details):
     weights = [0.3, 0.2, 0.3, 0.1, 0.1]
     return random.choices(audio_options, weights=weights)[0]
 
-def format_caption(movie, year, audio, language, genre, imdbRating, runTime, rated, synopsis):
+def format_caption(movie, year, audio, language, genre, imdb_rating, runTime, rated, synopsis):
     """Format the caption with Markdown"""
     
     
@@ -179,7 +285,7 @@ def format_caption(movie, year, audio, language, genre, imdbRating, runTime, rat
 » 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub）
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p |
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
-» 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdbRating}/10
+» 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdb_rating}/10
 » 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {formatted_runtime}
 » 𝗥𝗮𝘁𝗲𝗱: {CertificateRating}
 
@@ -190,7 +296,7 @@ def format_caption(movie, year, audio, language, genre, imdbRating, runTime, rat
 >[𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
     return caption
 
-def format_series_caption(movie, year, audio, language, genre, imdbRating, totalSeason, type, synopsis):
+def format_series_caption(movie, year, audio, language, genre, imdb_rating, runTime, totalSeason, type, synopsis):
     """Format the caption with Markdown"""
     
     audio = determine_audio({
@@ -208,6 +314,23 @@ def format_series_caption(movie, year, audio, language, genre, imdbRating, total
             season_count += f"\n│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n"
     except ValueError:
         season_count = "N/A"
+    
+    # calcate runtime    
+        
+    try:
+        # Extract the number from the "Runtime" string (e.g., "57 min")
+        minutes = int(runTime.split()[0])  # Get the numeric part
+        if minutes > 60:
+            hours = minutes // 60
+            remaining_minutes = minutes % 60
+            formatted_runtime = f"{hours}h {remaining_minutes}min"
+        elif minutes==60:
+            hours = minutes // 60
+            formatted_runtime = f"{hours}h"
+        else:
+            formatted_runtime = runTime
+    except (ValueError, IndexError):
+        formatted_runtime = runTime  # Use the raw value if parsing fails
         
     
     caption = f""" {movie} ({year})
@@ -215,9 +338,10 @@ def format_series_caption(movie, year, audio, language, genre, imdbRating, total
  ‣ 𝗧𝘆𝗽𝗲: {type.capitalize()}
  ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: {totalSeason}
  ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 𝟬𝟭-𝟬8
- ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdbRating}/10
+ ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdb_rating}/10
  ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 𝟰𝟴𝟬𝗽, 𝟳𝟮𝟬𝗽, 𝟭𝟬𝟴𝟬𝗽
  ‣ 𝗔𝘂𝗱𝗶𝗼:  {audio}
+ ‣ 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {formatted_runtime}
 ├──────────────────────
  ‣ 𝗚𝗲𝗻𝗿𝗲𝘀:{genre}
 ╰──────────────────────
@@ -292,14 +416,152 @@ async def start_command(client, message):
             error=e
         )
 
+@espada.on_message(filters.command(["trending", "tr"]))
+async def trending_command(client, message):
+    try:
+        # Check for optional page number in command
+        parts = message.text.split()
+        page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+        
+        # Show loading message
+        status_message = await message.reply_text("Fetching trending content... Please wait!")
+        
+        # Get trending content
+        trending_data = await get_trending_content(page=page)
+        
+        if not trending_data or not trending_data.get('results'):
+            await status_message.edit_text("No trending content found.")
+            return
+        
+        # Create keyboard with results
+        keyboard = create_content_list_keyboard(
+            trending_data['results'],
+            page,
+            trending_data['total_pages'],
+            'trending'
+        )
+        
+        # Update message with results
+        await status_message.edit_text(
+            f"📈 Trending Movies & TV Shows (Page {page}/{trending_data['total_pages']})",
+            reply_markup=keyboard
+        )
+        
+    except Exception as e:
+        await message.reply_text("An error occurred while fetching trending content.")
+        print(f"Trending command error: {str(e)}")
+
+@espada.on_message(filters.command(["popular", "pp"]))
+async def popular_command(client, message):
+    try:
+        # Check for optional page number in command
+        parts = message.text.split()
+        page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+        
+        # Show loading message
+        status_message = await message.reply_text("Fetching popular content... Please wait!")
+        
+        # Get popular content
+        popular_data = await get_popular_content(page=page)
+        
+        if not popular_data or not popular_data.get('results'):
+            await status_message.edit_text("No popular content found.")
+            return
+        
+        # Create keyboard with results
+        keyboard = create_content_list_keyboard(
+            popular_data['results'],
+            page,
+            popular_data['total_pages'],
+            'popular'
+        )
+        
+        # Update message with results
+        await status_message.edit_text(
+            f"🔥 Popular Movies (Page {page}/{popular_data['total_pages']})",
+            reply_markup=keyboard
+        )
+        
+    except Exception as e:
+        await message.reply_text("An error occurred while fetching popular content.")
+        print(f"Popular command error: {str(e)}")
+
+@espada.on_message(filters.command(["upcoming", "up"]))
+async def upcoming_command(client, message):
+    try:
+        # Check for optional page number in command
+        parts = message.text.split()
+        page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
+        
+        # Show loading message
+        status_message = await message.reply_text("Fetching upcoming content... Please wait!")
+        
+        # Get upcoming content
+        upcoming_data = await get_upcoming_content(page=page)
+        
+        if not upcoming_data or not upcoming_data.get('results'):
+            await status_message.edit_text("No upcoming content found.")
+            return
+        
+        # Create keyboard with results
+        keyboard = create_content_list_keyboard(
+            upcoming_data['results'],
+            page,
+            upcoming_data['total_pages'],
+            'upcoming'
+        )
+        
+        # Update message with results
+        await status_message.edit_text(
+            f"🆕 Upcoming Movies (Page {page}/{upcoming_data['total_pages']})",
+            reply_markup=keyboard
+        )
+        
+    except Exception as e:
+        await message.reply_text("An error occurred while fetching upcoming content.")
+        print(f"Upcoming command error: {str(e)}")
 
 @espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
     try:
-        if callback_query.data.startswith("title_"):
-            # Handle title selection
-            imdb_id = callback_query.data.split("_")[1]
-            await process_title_selection(callback_query, imdb_id)
+        
+        data = callback_query.data
+        
+        if "_page_" in data:
+            category, _, page = data.split("_")
+            page = int(page)
+            
+            # Show loading message
+            await callback_query.message.edit_text("Loading next page... Please wait!")
+            
+            if category == "trending":
+                content = await get_trending_content(page=page)
+                title = "📈 Trending Movies & TV Shows"
+            elif category == "popular":
+                content = await get_popular_content(page=page)
+                title = "🔥 Popular Movies"
+            elif category == "upcoming":
+                content = await get_upcoming_content(page=page)
+                title = "🆕 Upcoming Movies"
+            
+            if content and content.get('results'):
+                keyboard = create_content_list_keyboard(
+                    content['results'],
+                    page,
+                    content['total_pages'],
+                    category
+                )
+                await callback_query.message.edit_text(
+                    f"{title} (Page {page}/{content['total_pages']})",
+                    reply_markup=keyboard
+                )
+            else:
+                await callback_query.message.edit_text("No content found for this page.")
+        
+        elif data.startswith("title_"):
+            tmdb_id = data.split("_")[1]
+            media_type = data.split("_")[2] if len(data.split("_")) > 2 else "movie"
+            await process_title_selection(callback_query, tmdb_id, media_type)
         
         elif callback_query.data == "cancel_search":
             await callback_query.message.delete()
@@ -351,7 +613,7 @@ async def callback_query(client, callback_query: CallbackQuery):
             else:
                 await callback_query.answer("Already on Support screen")
         
-        elif callback_query.data == "movie":
+        elif callback_query.data == "movie_anime_hub":
             current_caption = callback_query.message.caption or callback_query.message.text
             if current_caption != MOVIE_TEXT:
                 await callback_query.message.edit_caption(
@@ -361,6 +623,8 @@ async def callback_query(client, callback_query: CallbackQuery):
                 )
             else:
                 await callback_query.answer("Already on Movie screen")
+        elif callback_query.data == "close":
+            await callback_query.message.delete()
         
         await callback_query.answer()
     
@@ -386,17 +650,27 @@ async def caption_command(client, message):
         status_message = await message.reply_text("Searching for movies... Please wait!")
 
         # Search for movies
-        results = await search_titles(movie_name, "movie")
+        search_results = await search_titles(movie_name, "movie")
         
-        if not results:
+        if not search_results:
             await status_message.edit_text("No movies found with that title. Please try a different search.")
             return
 
-        # Create and send results keyboard
-        reply_markup = create_search_results_keyboard(results)
+        results = {
+            'results': search_results[:10],
+            'page': 1,
+            'total_pages': 1
+        }
+        
+        keyborard = create_content_list_keyboard(
+            results['results'],
+            results['page'],
+            results['total_pages'],
+            'movie_search'
+        )
         await status_message.edit_text(
             "Found the following movies. Please select one:",
-            reply_markup=reply_markup
+            reply_markup=keyborard
         )
 
     except Exception as e:
@@ -419,17 +693,27 @@ async def series_command(client, message):
         status_message = await message.reply_text("Searching for series... Please wait!")
 
         # Search for series
-        results = await search_titles(series_name, "series")
+        search_results = await search_titles(series_name, "tv")
         
-        if not results:
+        if not search_results:
             await status_message.edit_text("No series found with that title. Please try a different search.")
             return
 
-        # Create and send results keyboard
-        reply_markup = create_search_results_keyboard(results)
+        results = {
+            'results': search_results[:10],
+            'page': 1,
+            'total_pages': 1
+        }
+       
+        keyboard = create_content_list_keyboard(
+            results['results'],
+            results['page'],
+            results['total_pages'],
+            'series_search'
+        )
         await status_message.edit_text(
             "Found the following series. Please select one:",
-            reply_markup=reply_markup
+            reply_markup=keyboard
         )
 
     except Exception as e:
@@ -460,23 +744,29 @@ async def default_response(client, message):
             chat_id=message.chat.id,
             error=e
         )
-async def process_title_selection(callback_query, imdb_id):
-    """Process the selected title and generate the appropriate caption"""
+async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
+    """Process the selected title and generate the appropriate caption with related content"""
     try:
         # Show loading message
         loading_msg = await callback_query.message.edit_text("Fetching details... Please wait!")
 
         # Get detailed information
-        title_data = await get_title_details(imdb_id)
+        title_data = await get_title_details(tmdb_id, media_type)
+        similar_data = await get_similar_titles(tmdb_id, media_type)
+        images_data = await get_images(tmdb_id, media_type)
+
         if not title_data:
             await loading_msg.edit_text("Failed to fetch title details. Please try again.")
             return
 
+        imdb_rating = title_data.get('imdb_rating', 'N/A')
+        
+        
         # Create data dictionary for additional message
-        if title_data.get('Type') == 'series':
+        if media_type == "tv":
             series_data = {
-                'movie_p': title_data.get('Title', 'N/A'),
-                'year_p': title_data.get('Year', 'N/A'),
+                'movie_p': title_data.get('name', 'N/A'),
+                'year_p': title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
             }
             additional_message = f"""`[PirecyKings2] [Sseason Eepisode] {series_data['movie_p']} ({series_data['year_p']}) @pirecykings2`
 
@@ -487,20 +777,20 @@ async def process_title_selection(callback_query, imdb_id):
 `S01 English - Hindi [1080p]`"""
             
             caption = format_series_caption(
-                title_data.get('Title', 'N/A'),
-                title_data.get('Year', 'N/A'),
-                title_data.get('Language', 'N/A'),
-                title_data.get('Language', 'N/A'),
-                title_data.get('Genre', 'N/A'),
-                title_data.get('imdbRating', 'N/A'),
-                title_data.get('totalSeasons', 'N/A'),
-                title_data.get('Type', 'N/A'),
-                title_data.get('Plot', 'N/A')
+                title_data.get('name', 'N/A'),
+                title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
+                'Multi',
+                title_data.get('original_language', 'N/A'),
+                ', '.join([genre['name'] for genre in title_data.get('genres', [])]),
+                imdb_rating,
+                title_data.get('number_of_seasons', 'N/A'),
+                'TV Series',
+                title_data.get('overview', 'N/A')
             )
         else:
             movie_data = {
-                'movie_p': title_data.get('Title', 'N/A'),
-                'year_p': title_data.get('Year', 'N/A'),
+                'movie_p': title_data.get('title', 'N/A'),
+                'year_p': title_data.get('release_date', 'N/A')[:4] if title_data.get('release_date') else 'N/A',
                 'audio_p': determine_audio(title_data)
             }
             additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
@@ -508,65 +798,118 @@ async def process_title_selection(callback_query, imdb_id):
 `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
             
             caption = format_caption(
-                title_data.get('Title', 'N/A'),
-                title_data.get('Year', 'N/A'),
-                title_data.get('Language', 'N/A'),
-                title_data.get('Language', 'N/A'),
-                title_data.get('Genre', 'N/A'),
-                title_data.get('imdbRating', 'N/A'),
-                title_data.get('Runtime', 'N/A'),
-                title_data.get('Rated', 'U/A'),
-                title_data.get('Plot', 'N/A')
+                title_data.get('title', 'N/A'),
+                title_data.get('release_date', 'N/A')[:4] if title_data.get('release_date') else 'N/A',
+                'Multi',
+                title_data.get('original_language', 'N/A'),
+                ', '.join([genre['name'] for genre in title_data.get('genres', [])]),
+                imdb_rating,
+                str(title_data.get('runtime', 'N/A')) + ' min',
+                title_data.get('adult', False) and 'A' or 'U/A',
+                title_data.get('overview', 'N/A')
             )
 
-        # Handle poster and send messages
-        poster_url = title_data.get('Poster')
-        if poster_url and poster_url != 'N/A':
-            try:
-                async with aiohttp.ClientSession() as session:
-                    async with session.get(poster_url) as response:
-                        if response.status == 200:
-                            poster_data = await response.read()
-                            poster_stream = BytesIO(poster_data)
-                            poster_stream.name = f"poster_{imdb_id}.jpg"
-                            
-                            # Delete loading message
-                            await callback_query.message.delete()
-                            
-                            # Send main caption with photo
-                            await callback_query.message.reply_photo(
-                                photo=poster_stream,
-                                caption=caption,
-                                parse_mode=ParseMode.MARKDOWN
-                            )
-                            
-                            # Send additional message
-                            await callback_query.message.reply_text(
-                                additional_message,
-                                parse_mode=ParseMode.MARKDOWN
-                            )
-                            return
-            except Exception as poster_error:
-                print(f"Poster download error: {str(poster_error)}")
+        # Create media group for multiple images
+        media_group = []
         
-        # Fallback to text-only if no poster or poster download failed
-        await callback_query.message.edit_text(
-            caption,
-            parse_mode=ParseMode.MARKDOWN
-        )
-        
-        # Send additional message even in text-only case
-        await callback_query.message.reply_text(
-            additional_message,
-            parse_mode=ParseMode.MARKDOWN
-        )
-        
+        # Add main poster
+        poster_path = title_data.get('poster_path')
+        if poster_path:
+            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
+            media_group.append(InputMediaPhoto(poster_url, caption=caption, parse_mode=ParseMode.MARKDOWN))
+
+        # Add additional backdrops (up to 2 more images)
+        if images_data and images_data.get('backdrops'):
+            for backdrop in images_data['backdrops'][:2]:  # Limit to 2 additional images
+                backdrop_path = backdrop.get('file_path')
+                if backdrop_path:
+                    backdrop_url = f"https://image.tmdb.org/t/p/w500{backdrop_path}"
+                    media_group.append(InputMediaPhoto(backdrop_url))
+
+        # Delete loading message
+        await loading_msg.delete()
+
+        # Send media group with images
+        if media_group:
+            await callback_query.message.reply_media_group(media_group)
+        else:
+            # Fallback to text-only if no images
+            await callback_query.message.reply_text(caption, parse_mode=ParseMode.MARKDOWN)
+
+        # Send additional message
+        await callback_query.message.reply_text(additional_message, parse_mode=ParseMode.MARKDOWN)
+
     except Exception as e:
         error_msg = f"Title selection error: {str(e)}"
         print(error_msg)
         await callback_query.message.edit_text(
             "An error occurred while processing your selection. Please try again."
         )
+
+# Update the command handlers to use the new functionality
+@espada.on_message(filters.command(["captionM", "cm"]))
+async def caption_command(client, message):
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            await message.reply_text(
+                "Please provide a movie name.\n"
+                "Example: `/cm Kalki 2898 AD`"
+            )
+            return
+
+        movie_name = " ".join(parts[1:])
+        status_message = await message.reply_text("Searching for movies... Please wait!")
+
+        # Search for movies
+        results = await search_titles(movie_name, "movie")
+        
+        if not results:
+            await status_message.edit_text("No movies found with that title. Please try a different search.")
+            return
+
+        # Create and send results keyboard
+        keyboard = create_content_list_keyboard(results[:10], 1, 1, "movie")  # Limit to top 10 results
+        await status_message.edit_text(
+            "🎬 Found the following movies. Please select one:",
+            reply_markup=keyboard
+        )
+
+    except Exception as e:
+        await message.reply_text("An error occurred while processing your request. Please try again later.")
+        print(f"Movie search error: {str(e)}")
+
+@espada.on_message(filters.command(["captionS", "cs"]))
+async def series_command(client, message):
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            await message.reply_text(
+                "Please provide a series name.\n"
+                "Example: `/cs Breaking Bad`"
+            )
+            return
+
+        series_name = " ".join(parts[1:])
+        status_message = await message.reply_text("Searching for series... Please wait!")
+
+        # Search for series
+        results = await search_titles(series_name, "tv")
+        
+        if not results:
+            await status_message.edit_text("No series found with that title. Please try a different search.")
+            return
+
+        # Create and send results keyboard
+        keyboard = create_content_list_keyboard(results[:10], 1, 1, "tv")  # Limit to top 10 results
+        await status_message.edit_text(
+            "📺 Found the following series. Please select one:",
+            reply_markup=keyboard
+        )
+
+    except Exception as e:
+        await message.reply_text("An error occurred while processing your request. Please try again later.")
+        print(f"Series search error: {str(e)}")
 
 async def start_bot():
     try:

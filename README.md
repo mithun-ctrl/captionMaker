@@ -1,138 +1,136 @@
-# Movie Caption Bot
+# Movie & TV Series Info Bot 🎬
 
-A Telegram bot built with Pyrogram that automatically creates formatted movie captions using OMDB API integration. It fetches movie details like title, audio languages, genre, and synopsis automatically when you provide a movie name.
+A Telegram bot that provides detailed information about movies and TV series using TMDB and OMDB APIs. The bot offers features like searching, trending content updates, and formatted media information with custom captions.
 
-## Features
+## Features 🌟
 
-- Automatic movie information fetching via OMDB API
-- Interactive caption creation process
-- Formatted movie information
-- Support for photos with captions
-- Professional movie detail formatting
-- Real-time movie data validation
+- **Search Movies & TV Shows**: Search for any movie or TV series with detailed information
+- **Trending Content**: Get updates on trending movies and TV shows
+- **Popular Content**: Discover popular movies and TV series
+- **Upcoming Releases**: Stay informed about upcoming movie releases
+- **Rich Media Support**: View movie/series posters and backdrops
+- **Detailed Information**: Get comprehensive details including:
+  - IMDb ratings
+  - Runtime
+  - Genre
+  - Audio languages
+  - Synopsis
+  - Release year
+  - Content rating
 
-## Prerequisites
+## Commands 📝
 
-- Python 3.8 or higher
-- A Telegram Bot Token (from [@BotFather](https://t.me/BotFather))
-- Telegram API credentials (api_id and api_hash from [my.telegram.org](https://my.telegram.org))
-- OMDB API key (from [omdbapi.com](http://www.omdbapi.com/apikey.aspx))
+- `/start` - Start the bot and see the main menu
+- `/cm` or `/captionM` - Search for a movie (e.g., `/cm Kalki 2898 AD`)
+- `/cs` or `/captionS` - Search for a TV series (e.g., `/cs Breaking Bad`)
+- `/tr` or `/trending` - View trending content
+- `/pp` or `/popular` - View popular movies
+- `/up` or `/upcoming` - View upcoming movies
 
-## Local Development Setup
+## Prerequisites 🛠️
+
+- Python 3.7+
+- Pyrogram library
+- aiohttp library
+- TMDB API key
+- OMDB API key
+- Telegram Bot Token
+
+## Environment Variables 🔐
+
+The following environment variables need to be set:
+
+```
+api_id=YOUR_TELEGRAM_API_ID
+api_hash=YOUR_TELEGRAM_API_HASH
+bot_token=YOUR_BOT_TOKEN
+log_channel=YOUR_LOG_CHANNEL_ID
+api_token=YOUR_TMDB_API_TOKEN
+omdb_api=YOUR_OMDB_API_KEY
+```
+
+## Installation 📥
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/yourusername/movie-caption-bot.git
-cd movie-caption-bot
+git clone https://github.com/mithun-ctrl/captionMaker.git
+cd movie-tv-bot
 ```
 
-2. Create a virtual environment:
-```bash
-python -m venv venv
-source venv/bin/activate  # On Windows use: venv\Scripts\activate
-```
-
-3. Install dependencies:
+2. Install required packages:
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Create a `.env` file with your credentials:
-```env
-API_ID=your_api_id
-API_HASH=your_api_hash
-BOT_TOKEN=your_bot_token
-OMDB_API_KEY=your_omdb_api_key
-LOG_CHANNEL=your_channel_id
-MAIN_CHANNEL="espada_org"
-SUPPORT_CHANNEL="espadaSupport"
+3. Set up environment variables
+
+4. Run the bot:
+```bash
+python main.py
 ```
 
-## Deployment on Railway
+## Features in Detail 📋
 
-### Step 1: Prepare Your Repository
+### Movie Information
+- Title and release year
+- Audio language information
+- Quality options (480p, 720p, 1080p)
+- Genre classification
+- IMDb rating
+- Runtime
+- Content rating
+- Plot synopsis
 
-1. Create a new repository on GitHub
-2. Create these files in your repository:
-   - `main.py` (the bot code)
-   - `requirements.txt`
-   - `Procfile`
-   - `README.md`
+### TV Series Information
+- Series title and year
+- Season information
+- Episode count
+- IMDb ratings
+- Available quality options
+- Audio language options
+- Runtime per episode
+- Genre details
 
-The `Procfile` should contain:
-```
-worker: python main.py
-```
+### Additional Features
+- Automatic audio language detection
+- Custom formatting for movie/series captions
+- Image carousel for posters and backdrops
+- Pagination support for search results
+- Interactive buttons for navigation
 
-### Step 2: Deploy to Railway
+## Error Handling 🔧
 
-1. Go to [Railway.app](https://railway.app/)
-2. Login with your GitHub account
-3. Click on "New Project"
-4. Select "Deploy from GitHub repo"
-5. Choose your repository
-6. Add the following environment variables in Railway:
-   - `API_ID` - Your Telegram API ID
-   - `API_HASH` - Your Telegram API Hash
-   - `BOT_TOKEN` - Your Telegram Bot Token
-   - `OMDB_API_KEY` - Your OMDB API Key
+The bot includes comprehensive error handling:
+- Connection error recovery
+- API failure handling
+- Invalid command responses
+- Search result validation
+- Media processing error handling
 
-Railway will automatically detect the Python runtime from your repository and deploy your bot.
+## Logging 📊
 
-## Usage
+The bot maintains detailed logs including:
+- Bot start/stop events
+- User interactions
+- Command usage
+- Error occurrences
+- API responses
 
-1. Start the bot by sending `/start`
-2. Use the `/caption` command followed by the movie name
-   Example: `/caption The Dark Knight`
-3. The bot will automatically:
-   - Fetch movie details from OMDB
-   - Download the movie poster
-   - Add the formatted caption
-   - Send the poster with caption
+## Contributing 🤝
 
-Example output:
-```
-The Dark Knight
-» 𝗔𝘂𝗱𝗶𝗼: English
-» 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p 
-» 𝗚𝗲𝗻𝗿𝗲: Action, Crime, Drama
-» 𝗦𝘆𝗻𝗼𝗽𝘀𝗶𝘀
-> When the menace known as the Joker wreaks havoc and chaos on the people of Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.
-@Teamxpirates
-[𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]
-```
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Directory Structure
-```
-movie-caption-bot/
-├── main.py
-├── .env
-├── .env.example
-├── requirements.txt
-├── Procfile
-└── README.md
-```
-## Error Handling
-
-The bot handles various scenarios:
-- Movie not found in OMDB database
-- Poster image not available
-- Network connection issues
-- Invalid movie names
-- API timeout errors
-
-## Contributing
-
-1. Fork the repository
-2. Create a new branch
-3. Make your changes
-4. Submit a pull request
-
-## License
+## License 📄
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
-## Acknowledgments
+## Disclaimer ⚠️
 
-- [OMDB API](http://www.omdbapi.com/) for providing movie data
-- [Pyrogram](https://docs.pyrogram.org/) for the Telegram bot framework
+This bot is for educational purposes only. Please ensure you comply with TMDB and OMDB API terms of service and Telegram's bot policies when using this code.
+
+## Support 💬
+
+For support, please open an issue in the GitHub repository or contact through the support channels mentioned in the bot's help section.
+
+---
+Made with ❤️ for movie and TV show enthusiasts
