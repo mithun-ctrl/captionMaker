@@ -11,7 +11,7 @@ from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT, MOVIE_TEXT
 import random
 from config import espada, api_hash, api_id, bot_token, log_channel, api_token, omdb_api
 
-if not all([api_id, api_hash, bot_token, log_channel, api_token, api_token, omdb_api]):
+if not all([api_id, api_hash, bot_token, log_channel, api_token, omdb_api]):
     raise ValueError("Please set environment variables correctly")
 
 logger = Logger(espada)
@@ -839,7 +839,7 @@ async def process_backdrops(client, title_data: dict, images_data: dict, user_id
         print(f"Error processing backdrops: {str(e)}")
         return None
 
-async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
+async def process_title_selection(client, callback_query, tmdb_id, media_type="movie"):
     """Process the selected title and generate the appropriate caption with related content"""
     try:
         # Show loading message
@@ -918,7 +918,7 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
             )
 
         backdrop_media = await process_backdrops(
-            client=callback_query.client,
+            client=client,
             title_data=title_data,
             images_data=images_data,
             user_id=callback_query.from_user.id
