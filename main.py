@@ -151,7 +151,14 @@ def create_content_list_keyboard(results, page, total_pages, command_type):
         title = item.get('title') or item.get('name')
         release_date = item.get('release_date') or item.get('first_air_date', '')
         year = release_date[:4] if release_date else 'N/A'
-        media_type = item.get('media_type', 'movie')
+        
+        # Determine media type correctly
+        if 'first_air_date' in item:
+            media_type = 'tv'
+        elif 'release_date' in item:
+            media_type = 'movie'
+        else:
+            media_type = item.get('media_type', 'movie')
         
         text = f"{title} ({year})"
         callback_data = f"title_{item['id']}_{media_type}"
@@ -524,7 +531,6 @@ async def upcoming_command(client, message):
 @espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
     try:
-        
         data = callback_query.data
         
         if "_page_" in data:
@@ -559,9 +565,14 @@ async def callback_query(client, callback_query: CallbackQuery):
                 await callback_query.message.edit_text("No content found for this page.")
         
         elif data.startswith("title_"):
-            tmdb_id = data.split("_")[1]
-            media_type = data.split("_")[2] if len(data.split("_")) > 2 else "movie"
-            await process_title_selection(callback_query, tmdb_id, media_type)
+            # Parse the callback data correctly
+            parts = data.split("_")
+            if len(parts) >= 3:
+                tmdb_id = parts[1]
+                media_type = parts[2]
+                await process_title_selection(callback_query, tmdb_id, media_type)
+            else:
+                await callback_query.answer("Invalid selection data")
         
         elif callback_query.data == "cancel_search":
             await callback_query.message.delete()
@@ -692,27 +703,27 @@ async def series_command(client, message):
         series_name = " ".join(parts[1:])
         status_message = await message.reply_text("Searching for series... Please wait!")
 
-        # Search for series
-        search_results = await search_titles(series_name, "tv")
+        # Search specifically for TV series
+        results = await search_titles(series_name, "tv")
         
-        if not search_results:
+        if not results:
             await status_message.edit_text("No series found with that title. Please try a different search.")
             return
 
-        results = {
-            'results': search_results[:10],
-            'page': 1,
-            'total_pages': 1
-        }
-       
+        # Ensure each result is marked as a TV series
+        for result in results:
+            result['media_type'] = 'tv'
+
+        # Create keyboard with properly tagged results
         keyboard = create_content_list_keyboard(
-            results['results'],
-            results['page'],
-            results['total_pages'],
-            'series_search'
+            results[:10],
+            1,
+            1,
+            "series_search"
         )
+        
         await status_message.edit_text(
-            "Found the following series. Please select one:",
+            "📺 Found the following series. Please select one:",
             reply_markup=keyboard
         )
 
