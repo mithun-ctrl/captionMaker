@@ -772,7 +772,6 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
 
         imdb_rating = title_data.get('imdb_rating', 'N/A')
         
-        
         # Create data dictionary for additional message
         if media_type == "tv":
             series_data = {
@@ -787,16 +786,18 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
 
 `S01 English - Hindi [1080p]`"""
             
+            # Fixed format_series_caption call with all required parameters
             caption = format_series_caption(
-                title_data.get('name', 'N/A'),
-                title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
-                'Multi',
-                title_data.get('original_language', 'N/A'),
-                ', '.join([genre['name'] for genre in title_data.get('genres', [])]),
-                imdb_rating,
-                title_data.get('number_of_seasons', 'N/A'),
-                'TV Series',
-                title_data.get('overview', 'N/A')
+                movie=title_data.get('name', 'N/A'),
+                year=title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
+                audio='Multi',
+                language=title_data.get('original_language', 'N/A'),
+                genre=', '.join([genre['name'] for genre in title_data.get('genres', [])]),
+                imdb_rating=imdb_rating,
+                runTime=str(title_data.get('episode_run_time', [0])[0] if title_data.get('episode_run_time') else 'N/A') + ' min',
+                totalSeason=str(title_data.get('number_of_seasons', 'N/A')),
+                type='TV Series',
+                synopsis=title_data.get('overview', 'N/A')
             )
         else:
             movie_data = {
@@ -809,15 +810,15 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
 `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
             
             caption = format_caption(
-                title_data.get('title', 'N/A'),
-                title_data.get('release_date', 'N/A')[:4] if title_data.get('release_date') else 'N/A',
-                'Multi',
-                title_data.get('original_language', 'N/A'),
-                ', '.join([genre['name'] for genre in title_data.get('genres', [])]),
-                imdb_rating,
-                str(title_data.get('runtime', 'N/A')) + ' min',
-                title_data.get('adult', False) and 'A' or 'U/A',
-                title_data.get('overview', 'N/A')
+                movie=title_data.get('title', 'N/A'),
+                year=title_data.get('release_date', 'N/A')[:4] if title_data.get('release_date') else 'N/A',
+                audio='Multi',
+                language=title_data.get('original_language', 'N/A'),
+                genre=', '.join([genre['name'] for genre in title_data.get('genres', [])]),
+                imdb_rating=imdb_rating,
+                runTime=str(title_data.get('runtime', 'N/A')) + ' min',
+                rated=title_data.get('adult', False) and 'A' or 'U/A',
+                synopsis=title_data.get('overview', 'N/A')
             )
 
         # Create media group for multiple images
