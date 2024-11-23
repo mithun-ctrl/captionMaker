@@ -3,6 +3,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram.enums import ParseMode
 import asyncio
 import aiohttp
+from datetime import datetime
+from typing import Optional, Dict
 from io import BytesIO
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT, MOVIE_TEXT
@@ -14,6 +16,7 @@ if not all([api_id, api_hash, bot_token, log_channel, api_token, api_token, omdb
 
 logger = Logger(espada)
 OMDB_API_KEY= omdb_api
+DUMP_CHANNELS: Dict[int, int] = {}
 
 TMDB_BASE_URL = "https://api.themoviedb.org/3"
 TMDB_API_KEY = api_token
@@ -731,6 +734,38 @@ async def series_command(client, message):
         await message.reply_text("An error occurred while processing your request. Please try again later.")
         print(f"Series search error: {str(e)}")
         
+@espada.on_message(filters.command(["dump"]))
+async def set_dump_channel(client, message):
+    try:
+        if len(message.command) != 2:
+            await message.reply_text(
+                "Please provide the channel ID.\n"
+                "Usage: `/dump -100xxxxxxxxxxxx`"
+            )
+            return
+        
+        channel_id = int(message.command[1])
+        user_id = message.from_user.id
+        
+        try:
+            # Try to send a test message to verify bot has access
+            test_msg = await client.send_message(channel_id, "Testing channel access...")
+            await test_msg.delete()
+            
+            DUMP_CHANNELS[user_id] = channel_id
+            await message.reply_text("✅ Dump channel set successfully!")
+            
+        except Exception as e:
+            await message.reply_text(
+                "❌ Failed to set dump channel. Please make sure:\n"
+                "1. The channel ID is correct\n"
+                "2. The bot is added to the channel\n"
+                "3. The bot has permission to post in the channel"
+            )
+            
+    except Exception as e:
+        await message.reply_text("An error occurred while setting dump channel.")
+        print(f"Set dump channel error: {str(e)}") 
         
 @espada.on_message(~filters.command(["start", "captionM", "cm","captionS", "cs"]) & ~filters.channel & ~filters.group)
 async def default_response(client, message):
@@ -755,7 +790,48 @@ async def default_response(client, message):
             chat_id=message.chat.id,
             error=e
         )
-async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
+
+async def process_backdrops(client, user_id: int, title_data: dict, images_data: dict) -> None:
+    """Process and send backdrop images to appropriate channels"""
+    try:
+        if not images_data or not images_data.get('backdrops'):
+            return
+
+        title = title_data.get('title') or title_data.get('name', 'N/A')
+        year = (title_data.get('release_date') or title_data.get('first_air_date', 'N/A'))[:4]
+        
+        # Get first 3 backdrop images
+        backdrops = images_data['backdrops'][:3]
+        if not backdrops:
+            return
+            
+        backdrop_media = []
+        
+        # First backdrop with English text
+        if len(backdrops) > 0:
+            backdrop_path = backdrops[0].get('file_path')
+            if backdrop_path:
+                backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
+                caption = f"🎬 {title} ({year}) #English"
+                backdrop_media.append(InputMediaPhoto(media=backdrop_url, caption=caption))
+        
+        # Other backdrops without text
+        for backdrop in backdrops[1:]:
+            backdrop_path = backdrop.get('file_path')
+            if backdrop_path:
+                backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
+                caption = f"🎬 {title} ({year})"
+                backdrop_media.append(InputMediaPhoto(media=backdrop_url, caption=caption))
+        
+        # Send to dump channel if configured
+        dump_channel = DUMP_CHANNELS.get(user_id)
+        if dump_channel and backdrop_media:
+            await client.send_media_group(dump_channel, backdrop_media)
+            
+    except Exception as e:
+        print(f"Error processing backdrops: {str(e)}")
+
+async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, media_type: str = "movie") -> None:
     """Process the selected title and generate the appropriate caption with related content"""
     try:
         # Show loading message
@@ -833,22 +909,13 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
                 parse_mode=ParseMode.MARKDOWN
             )
 
-        # Send backdrops separately with a simple caption
-        if images_data and images_data.get('backdrops'):
-            backdrop_media = []
-            for backdrop in images_data['backdrops'][:3]:  # Limit to 3 backdrop images
-                backdrop_path = backdrop.get('file_path')
-                if backdrop_path:
-                    backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
-                    backdrop_media.append(InputMediaPhoto(
-                        media=backdrop_url,
-                        caption=f"🎬 Backdrop Image for {title_data.get('title') or title_data.get('name', 'N/A')}"
-                    ))
-            
-            if backdrop_media:
-                await callback_query.message.reply_media_group(backdrop_media)
+        await process_backdrops(
+            client=callback_query.message._client,
+            user_id=callback_query.from_user.id,
+            title_data=title_data,
+            images_data=images_data
+        )
 
-        # Send additional message for file naming format
         await callback_query.message.reply_text(additional_message, parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
