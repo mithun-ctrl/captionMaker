@@ -609,7 +609,7 @@ async def callback_query(client, callback_query: CallbackQuery):
             if len(parts) >= 3:
                 tmdb_id = parts[1]
                 media_type = parts[2]
-                await process_title_selection(callback_query, tmdb_id, media_type)
+                await process_title_selection(client, callback_query, tmdb_id, media_type)
             else:
                 await callback_query.answer("Invalid selection data")
         
@@ -847,7 +847,7 @@ async def process_backdrops(espada: Client, title_data: dict, images_data: dict,
         print(f"Error processing backdrops: {str(e)}")
         return None
     
-async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
+async def process_title_selection(espada: Client, callback_query, tmdb_id, media_type="movie"):
     """Process the selected title and generate the appropriate caption with related content"""
     try:
         
