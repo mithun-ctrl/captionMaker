@@ -820,32 +820,33 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
                 synopsis=title_data.get('overview', 'N/A')
             )
 
-        # Create media group for multiple images
-        media_group = []
-        
-        # Add main poster first with caption
-        poster_path = title_data.get('poster_path')
-        if poster_path:
-            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
-            media_group.append(InputMediaPhoto(poster_url, caption=caption, parse_mode=ParseMode.MARKDOWN))
-
-            # Add backdrops to the media group
-            if images_data and images_data.get('backdrops'):
-                for backdrop in images_data['backdrops'][:2]:  # Limit to 2 additional images
-                    backdrop_path = backdrop.get('file_path')
-                    if backdrop_path:
-                        backdrop_url = f"https://image.tmdb.org/t/p/w500{backdrop_path}"
-                        media_group.append(InputMediaPhoto(backdrop_url))
-
         # Delete loading message
         await loading_msg.delete()
 
-        # Send media group with images and caption
-        if media_group:
-            await callback_query.message.reply_media_group(media_group)
-        else:
-            # Fallback to text-only if no images
-            await callback_query.message.reply_text(caption, parse_mode=ParseMode.MARKDOWN)
+        # Send main poster with caption
+        poster_path = title_data.get('poster_path')
+        if poster_path:
+            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
+            await callback_query.message.reply_photo(
+                photo=poster_url,
+                caption=caption,
+                parse_mode=ParseMode.MARKDOWN
+            )
+
+        # Send backdrops separately with a simple caption
+        if images_data and images_data.get('backdrops'):
+            backdrop_media = []
+            for backdrop in images_data['backdrops'][:3]:  # Limit to 3 backdrop images
+                backdrop_path = backdrop.get('file_path')
+                if backdrop_path:
+                    backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
+                    backdrop_media.append(InputMediaPhoto(
+                        media=backdrop_url,
+                        caption=f"🎬 Backdrop Image for {title_data.get('title') or title_data.get('name', 'N/A')}"
+                    ))
+            
+            if backdrop_media:
+                await callback_query.message.reply_media_group(backdrop_media)
 
         # Send additional message for file naming format
         await callback_query.message.reply_text(additional_message, parse_mode=ParseMode.MARKDOWN)
