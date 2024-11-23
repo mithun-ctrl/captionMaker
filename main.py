@@ -1,8 +1,8 @@
-from pyrogram import filters
+from pyrogram import filters, Client 
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto, Message
 from pyrogram.enums import ParseMode
 import asyncio
-from typing import Optional
+from typing import Optional, List
 import re
 import aiohttp
 from io import BytesIO
@@ -794,14 +794,26 @@ async def default_response(client, message):
             chat_id=message.chat.id,
             error=e
         )
-async def process_backdrops(client, title_data: dict, images_data: dict, user_id: int) -> Optional[list]:
-    """Process and prepare backdrop images with specific configurations"""
+async def process_backdrops(espada: Client, title_data: dict, images_data: dict, user_id: int) -> Optional[List[InputMediaPhoto]]:
+    """
+    Process and prepare backdrop images with specific configurations
+    
+    Args:
+        espada (Client): The Pyrogram Client instance named espada
+        title_data (dict): Dictionary containing title information
+        images_data (dict): Dictionary containing image information
+        user_id (int): User ID for dump channel functionality
+        
+    Returns:
+        Optional[List[InputMediaPhoto]]: List of prepared backdrop media or None if processing fails
+    """
     try:
         if not images_data or not images_data.get('backdrops'):
             return None
             
         backdrop_media = []
         backdrops = images_data['backdrops'][:3]  # Get first 3 backdrops
+        title = title_data.get('title') or title_data.get('name', 'N/A')
         
         for idx, backdrop in enumerate(backdrops):
             backdrop_path = backdrop.get('file_path')
@@ -809,41 +821,42 @@ async def process_backdrops(client, title_data: dict, images_data: dict, user_id
                 continue
                 
             backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
-            title = title_data.get('title') or title_data.get('name', 'N/A')
-            
-            # First backdrop with English text
-            if idx == 0:
-                caption = f"🎬 {title} - English Backdrop"
-            else:
-                caption = f"🎬 {title} - Backdrop {idx + 1}"
+            caption = f"🎬 {title} - {'English Backdrop' if idx == 0 else f'Backdrop {idx + 1}'}"
                 
             backdrop_media.append(InputMediaPhoto(
                 media=backdrop_url,
                 caption=caption
             ))
             
-            # If dump channel is set for this user, send to dump channel
+            # Handle dump channel functionality
             dump_channel = dump_channels.get(user_id)
             if dump_channel:
                 try:
-                    await client.send_photo(
+                    await espada.send_photo(
                         chat_id=dump_channel,
                         photo=backdrop_url,
                         caption=caption
                     )
-                except Exception as e:
-                    print(f"Error sending to dump channel: {str(e)}")
+                except Exception as dump_error:
+                    print(f"Error sending to dump channel: {str(dump_error)}")
+                    continue
         
-        return backdrop_media
+        return backdrop_media if backdrop_media else None
+        
     except Exception as e:
         print(f"Error processing backdrops: {str(e)}")
         return None
-
-async def process_title_selection(client, callback_query, tmdb_id, media_type="movie"):
+    
+async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
     """Process the selected title and generate the appropriate caption with related content"""
     try:
-        # Show loading message
-        loading_msg = await callback_query.message.edit_text("Fetching details... Please wait!")
+        
+        espada = callback_query.client;
+        
+        try:
+            loading_msg = await callback_query.message.edit_text("Fetching details... Please wait!")
+        except Exception as edit_error:
+            loading_msg = await callback_query.message.reply_text("Fetching details... Please wait!")
 
         # Get detailed information
         title_data = await get_title_details(tmdb_id, media_type)
@@ -918,7 +931,7 @@ async def process_title_selection(client, callback_query, tmdb_id, media_type="m
             )
 
         backdrop_media = await process_backdrops(
-            client=client,
+            espada=espada,
             title_data=title_data,
             images_data=images_data,
             user_id=callback_query.from_user.id
