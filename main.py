@@ -786,7 +786,6 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
 
 `S01 English - Hindi [1080p]`"""
             
-            # Fixed format_series_caption call with all required parameters
             caption = format_series_caption(
                 movie=title_data.get('name', 'N/A'),
                 year=title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
@@ -824,31 +823,31 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
         # Create media group for multiple images
         media_group = []
         
-        # Add main poster
+        # Add main poster first with caption
         poster_path = title_data.get('poster_path')
         if poster_path:
             poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
             media_group.append(InputMediaPhoto(poster_url, caption=caption, parse_mode=ParseMode.MARKDOWN))
 
-        # Add additional backdrops (up to 2 more images)
-        if images_data and images_data.get('backdrops'):
-            for backdrop in images_data['backdrops'][:2]:  # Limit to 2 additional images
-                backdrop_path = backdrop.get('file_path')
-                if backdrop_path:
-                    backdrop_url = f"https://image.tmdb.org/t/p/w500{backdrop_path}"
-                    media_group.append(InputMediaPhoto(backdrop_url))
+            # Add backdrops to the media group
+            if images_data and images_data.get('backdrops'):
+                for backdrop in images_data['backdrops'][:2]:  # Limit to 2 additional images
+                    backdrop_path = backdrop.get('file_path')
+                    if backdrop_path:
+                        backdrop_url = f"https://image.tmdb.org/t/p/w500{backdrop_path}"
+                        media_group.append(InputMediaPhoto(backdrop_url))
 
         # Delete loading message
         await loading_msg.delete()
 
-        # Send media group with images
+        # Send media group with images and caption
         if media_group:
             await callback_query.message.reply_media_group(media_group)
         else:
             # Fallback to text-only if no images
             await callback_query.message.reply_text(caption, parse_mode=ParseMode.MARKDOWN)
 
-        # Send additional message
+        # Send additional message for file naming format
         await callback_query.message.reply_text(additional_message, parse_mode=ParseMode.MARKDOWN)
 
     except Exception as e:
