@@ -1,7 +1,9 @@
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto, Message
 from pyrogram.enums import ParseMode
 import asyncio
+from typing import Optional
+import re
 import aiohttp
 from io import BytesIO
 from plugins.logs import Logger
@@ -21,6 +23,8 @@ TMDB_HEADERS = {
     "accept": "application/json",
     "Authorization": f"Bearer {TMDB_API_KEY}"
 }
+
+dump_channels = {}
 
 start_keyboard = InlineKeyboardMarkup([
     [InlineKeyboardButton("🏠 Home", callback_data="home"),
@@ -528,6 +532,41 @@ async def upcoming_command(client, message):
         await message.reply_text("An error occurred while fetching upcoming content.")
         print(f"Upcoming command error: {str(e)}")
 
+@espada.on_message(filters.command(["dump"]))
+async def set_dump_channel(client, message: Message):
+    try:
+        # Check if command has channel ID
+        if len(message.command) != 2:
+            await message.reply_text(
+                "Please provide the channel ID.\n"
+                "Example: `/dump -100xxxxxxxxxxxx`"
+            )
+            return
+        
+        channel_id = message.command[1]
+        
+        # Validate channel ID format
+        if not re.match(r'^-100\d+$', channel_id):
+            await message.reply_text("Invalid channel ID format. Channel ID should start with -100 followed by numbers.")
+            return
+            
+        # Try to send a test message to verify bot has access
+        try:
+            test_msg = await client.send_message(int(channel_id), "Test message for dump channel verification.")
+            await test_msg.delete()
+        except Exception as e:
+            await message.reply_text("Failed to set dump channel. Please make sure:\n1. The channel ID is correct\n2. The bot is added to the channel\n3. The bot has permission to post in the channel")
+            return
+            
+        # Store the dump channel ID for this user
+        dump_channels[message.from_user.id] = int(channel_id)
+        
+        await message.reply_text("✅ Dump channel set successfully!")
+        
+    except Exception as e:
+        await message.reply_text("An error occurred while setting the dump channel.")
+        print(f"Set dump channel error: {str(e)}")
+
 @espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
     try:
@@ -755,6 +794,51 @@ async def default_response(client, message):
             chat_id=message.chat.id,
             error=e
         )
+async def process_backdrops(client, title_data: dict, images_data: dict, user_id: int) -> Optional[list]:
+    """Process and prepare backdrop images with specific configurations"""
+    try:
+        if not images_data or not images_data.get('backdrops'):
+            return None
+            
+        backdrop_media = []
+        backdrops = images_data['backdrops'][:3]  # Get first 3 backdrops
+        
+        for idx, backdrop in enumerate(backdrops):
+            backdrop_path = backdrop.get('file_path')
+            if not backdrop_path:
+                continue
+                
+            backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
+            title = title_data.get('title') or title_data.get('name', 'N/A')
+            
+            # First backdrop with English text
+            if idx == 0:
+                caption = f"🎬 {title} - English Backdrop"
+            else:
+                caption = f"🎬 {title} - Backdrop {idx + 1}"
+                
+            backdrop_media.append(InputMediaPhoto(
+                media=backdrop_url,
+                caption=caption
+            ))
+            
+            # If dump channel is set for this user, send to dump channel
+            dump_channel = dump_channels.get(user_id)
+            if dump_channel:
+                try:
+                    await client.send_photo(
+                        chat_id=dump_channel,
+                        photo=backdrop_url,
+                        caption=caption
+                    )
+                except Exception as e:
+                    print(f"Error sending to dump channel: {str(e)}")
+        
+        return backdrop_media
+    except Exception as e:
+        print(f"Error processing backdrops: {str(e)}")
+        return None
+
 async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
     """Process the selected title and generate the appropriate caption with related content"""
     try:
@@ -763,9 +847,9 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
 
         # Get detailed information
         title_data = await get_title_details(tmdb_id, media_type)
-        similar_data = await get_similar_titles(tmdb_id, media_type)
         images_data = await get_images(tmdb_id, media_type)
-
+        similar_data = await get_similar_titles(tmdb_id, media_type)
+        
         if not title_data:
             await loading_msg.edit_text("Failed to fetch title details. Please try again.")
             return
@@ -833,20 +917,15 @@ async def process_title_selection(callback_query, tmdb_id, media_type="movie"):
                 parse_mode=ParseMode.MARKDOWN
             )
 
-        # Send backdrops separately with a simple caption
-        if images_data and images_data.get('backdrops'):
-            backdrop_media = []
-            for backdrop in images_data['backdrops'][:3]:  # Limit to 3 backdrop images
-                backdrop_path = backdrop.get('file_path')
-                if backdrop_path:
-                    backdrop_url = f"https://image.tmdb.org/t/p/original{backdrop_path}"
-                    backdrop_media.append(InputMediaPhoto(
-                        media=backdrop_url,
-                        caption=f"🎬 Backdrop Image for {title_data.get('title') or title_data.get('name', 'N/A')}"
-                    ))
+        backdrop_media = await process_backdrops(
+            client=callback_query.client,
+            title_data=title_data,
+            images_data=images_data,
+            user_id=callback_query.from_user.id
+        )
             
-            if backdrop_media:
-                await callback_query.message.reply_media_group(backdrop_media)
+        if backdrop_media:
+            await callback_query.message.reply_media_group(backdrop_media)
 
         # Send additional message for file naming format
         await callback_query.message.reply_text(additional_message, parse_mode=ParseMode.MARKDOWN)
