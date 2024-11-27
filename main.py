@@ -428,7 +428,13 @@ async def start_command(client, message):
 @espada.on_message(filters.command(["trending", "tr"]))
 async def trending_command(client, message):
     try:
-        # Check for optional page number in command
+        
+        try:
+            await asyncio.sleep(5)
+            await message.delete(revoke=True)
+        except Exception as e:
+            print(f"Error deleting message: {e}")
+        
         parts = message.text.split()
         page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
         
@@ -455,6 +461,12 @@ async def trending_command(client, message):
             f"📈 Trending Movies & TV Shows (Page {page}/{trending_data['total_pages']})",
             reply_markup=keyboard
         )
+        await logger.log_message(
+            action="Trending Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
+        )
         
     except Exception as e:
         await message.reply_text("An error occurred while fetching trending content.")
@@ -463,7 +475,13 @@ async def trending_command(client, message):
 @espada.on_message(filters.command(["popular", "pp"]))
 async def popular_command(client, message):
     try:
-        # Check for optional page number in command
+        
+        try:
+            await asyncio.sleep(5)
+            await message.delete(revoke=True)
+        except Exception as e:
+            print(f"Error deleting message: {e}")
+        
         parts = message.text.split()
         page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
         
@@ -491,6 +509,13 @@ async def popular_command(client, message):
             reply_markup=keyboard
         )
         
+        await logger.log_message(
+            action="Popular Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
+        )
+        
     except Exception as e:
         await message.reply_text("An error occurred while fetching popular content.")
         print(f"Popular command error: {str(e)}")
@@ -500,7 +525,7 @@ async def upcoming_command(client, message):
     try:
         
         try:
-            await asyncio.sleep(2)
+            await asyncio.sleep(5)
             await message.delete(revoke=True)
         except Exception as e:
             print(f"Error deleting message: {e}")
@@ -530,6 +555,13 @@ async def upcoming_command(client, message):
         await status_message.edit_text(
             f"🆕 Upcoming Movies (Page {page}/{upcoming_data['total_pages']})",
             reply_markup=keyboard
+        )
+        
+        await logger.log_message(
+            action="Upcoming Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
         )
         
     except Exception as e:
@@ -691,6 +723,13 @@ async def caption_command(client, message):
             "Found the following movies. Please select one:",
             reply_markup=keyborard
         )
+        
+        await logger.log_message(
+            action="Movie Caption Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
+        )
 
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
@@ -733,6 +772,13 @@ async def series_command(client, message):
         await status_message.edit_text(
             "📺 Found the following series. Please select one:",
             reply_markup=keyboard
+        )
+        
+        await logger.log_message(
+            action="Series Caption Command",
+            user_id=message.from_user.id,
+            username=message.from_user.username,
+            chat_id=message.chat.id
         )
 
     except Exception as e:
