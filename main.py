@@ -1,271 +1,108 @@
 from pyrogram import filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery,InputMediaPhoto
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, InputMediaPhoto
 from pyrogram.enums import ParseMode
 import asyncio
-import aiohttp
-from typing import Dict
 from io import BytesIO
+import random
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT, MOVIE_TEXT
-import random
-from config import espada, api_hash, api_id, bot_token, log_channel, api_token, omdb_api
+from buttons.startButton import start_keyboard
+from config import (
+    espada,
+    api_hash,
+    api_id,
+    bot_token,
+    log_channel,
+    tmdb_api_token,
+    omdb_api,
+    DUMP_CHANNELS,
+)
+from handlers.tmdb import tmdbFunctions
+from handlers.download import downloadHandler
 
-if not all([api_id, api_hash, bot_token, log_channel, api_token, api_token, omdb_api]):
+if not all([api_id, api_hash, bot_token, log_channel, tmdb_api_token, omdb_api]):
     raise ValueError("Please set environment variables correctly")
 
 logger = Logger(espada)
-OMDB_API_KEY= omdb_api
-DUMP_CHANNELS: Dict[int, int] = {}
+OMDB_API_KEY = omdb_api
+TMDB_API_KEY = tmdb_api_token
 
-TMDB_BASE_URL = "https://api.themoviedb.org/3"
-TMDB_API_KEY = api_token
-TMDB_HEADERS = {
-    "accept": "application/json",
-    "Authorization": f"Bearer {TMDB_API_KEY}"
-}
+tmdb = tmdbFunctions()
+download = downloadHandler()
 
-start_keyboard = InlineKeyboardMarkup([
-    [InlineKeyboardButton("🏠 Home", callback_data="home"),
-     InlineKeyboardButton("🤖 About", callback_data="about")],
-    [InlineKeyboardButton("💬 Support", callback_data="support"),
-     InlineKeyboardButton("ℹ️ Help", callback_data="help")],
-    [InlineKeyboardButton("🎬 MoAni Hub", callback_data="movie_anime_hub"),
-     InlineKeyboardButton("🙅‍♂️ Close", callback_data="close")
-     ]
-])
-
-async def get_imdb_rating(imdb_id):
-    """
-    Fetch IMDb rating using OMDB API
-    """
-    try:
-        if not imdb_id:
-            return 'N/A'
-            
-        url = f"http://www.omdbapi.com/?i={imdb_id}&apikey={OMDB_API_KEY}"
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url) as response:
-                if response.status == 200:
-                    data = await response.json()
-                    rating = data.get('imdbRating')
-                    return rating if rating and rating != 'N/A' else '0'
-                return '0'
-    except Exception as e:
-        print(f"Error fetching IMDb rating: {str(e)}")
-        return '0'
-
-async def get_tmdb_data(endpoint, params=None):
-    """Generic function to fetch data from TMDB API"""
-    try:
-        url = f"{TMDB_BASE_URL}/{endpoint}"
-        params = params or {}
-        params['api_key'] = TMDB_API_KEY
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url, headers=TMDB_HEADERS, params=params) as response:
-                if response.status == 200:
-                    return await response.json()
-                else:
-                    print(f"TMDB API error: {response.status}")
-                    return None
-    except Exception as e:
-        print(f"TMDB API error: {str(e)}")
-        return None
-
-
-async def search_titles(query, media_type="movie", page=1):
-    """Search for movies/TV shows using TMDB API"""
-    params = {
-        "query": query,
-        "include_adult": "false",
-        "language": "en-US",
-        "page": page
-    }
-    
-    if media_type == "movie":
-        endpoint = "search/movie"
-    else:
-        endpoint = "search/tv"
-        
-    data = await get_tmdb_data(endpoint, params)
-    return data.get('results', []) if data else []
-
-async def get_title_details(tmdb_id, media_type="movie"):
-    """Get detailed information for a specific title"""
-    try:
-        endpoint = f"{media_type}/{tmdb_id}"
-        params = {
-            "language": "en-US",
-            "append_to_response": "credits,videos,images,external_ids"
-        }
-        
-        data = await get_tmdb_data(endpoint, params)
-        
-        if data:
-            # Get IMDb ID from external_ids
-            imdb_id = data.get('external_ids', {}).get('imdb_id')
-            if imdb_id:
-                # Fetch and add IMDb rating
-                imdb_rating = await get_imdb_rating(imdb_id)
-                data['imdb_rating'] = imdb_rating
-            else:
-                data['imdb_rating'] = '0'
-                
-        return data
-    except Exception as e:
-        print(f"Error getting title details: {str(e)}")
-        return None
-
-async def get_similar_titles(tmdb_id, media_type="movie"):
-    """Get similar movies/TV shows"""
-    endpoint = f"{media_type}/{tmdb_id}/similar"
-    params = {"page": 1}
-    return await get_tmdb_data(endpoint, params)
-
-async def get_images(tmdb_id, media_type="movie"):
-    """Get additional images for a title"""
-    endpoint = f"{media_type}/{tmdb_id}/images"
-    return await get_tmdb_data(endpoint)
-
-async def get_trending_content(media_type="all", time_window="week", page=1):
-    """Get trending movies/TV shows"""
-    endpoint = f"trending/{media_type}/{time_window}"
-    params = {"page": page}
-    return await get_tmdb_data(endpoint, params)
-
-async def get_popular_content(media_type="movie", page=1):
-    """Get popular movies/TV shows"""
-    endpoint = f"{media_type}/popular"
-    params = {"page": page}
-    return await get_tmdb_data(endpoint, params)
-
-async def get_upcoming_content(page=1):
-    """Get upcoming movies"""
-    endpoint = "movie/upcoming"
-    params = {"page": page}
-    return await get_tmdb_data(endpoint, params)
 
 def create_content_list_keyboard(results, page, total_pages, command_type):
-    """Create keyboard for content listings with pagination"""
     buttons = []
-    
-    # Add content buttons
     for item in results:
-        title = item.get('title') or item.get('name')
-        release_date = item.get('release_date') or item.get('first_air_date', '')
-        year = release_date[:4] if release_date else 'N/A'
-        
-        # Determine media type correctly
-        if 'first_air_date' in item:
-            media_type = 'tv'
-        elif 'release_date' in item:
-            media_type = 'movie'
+        title = item.get("title") or item.get("name")
+        release_date = item.get("release_date") or item.get("first_air_date", "")
+        year = release_date[:4] if release_date else "N/A"
+        if "first_air_date" in item:
+            media_type = "tv"
+        elif "release_date" in item:
+            media_type = "movie"
         else:
-            media_type = item.get('media_type', 'movie')
-        
+            media_type = item.get("media_type", "movie")
         text = f"{title} ({year})"
         callback_data = f"title_{item['id']}_{media_type}"
         buttons.append([InlineKeyboardButton(text, callback_data=callback_data)])
-    
-    # Add pagination buttons
     nav_buttons = []
     if page > 1:
-        nav_buttons.append(InlineKeyboardButton(
-            "⬅️ Previous",
-            callback_data=f"{command_type}_page_{page-1}"
-        ))
+        nav_buttons.append(
+            InlineKeyboardButton(
+                "⬅️ Previous", callback_data=f"{command_type}_page_{page-1}"
+            )
+        )
     if page < total_pages:
-        nav_buttons.append(InlineKeyboardButton(
-            "Next ➡️",
-            callback_data=f"{command_type}_page_{page+1}"
-        ))
-    
+        nav_buttons.append(
+            InlineKeyboardButton("Next ➡️", callback_data=f"{command_type}_page_{page+1}")
+        )
     if nav_buttons:
         buttons.append(nav_buttons)
-    
-    # Add home button
     buttons.append([InlineKeyboardButton("❌ Cancel", callback_data="cancel_search")])
-    
     return InlineKeyboardMarkup(buttons)
 
 
-async def download_image(url):
-    """Download image from URL"""
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status == 200:
-                return await response.read()
-    return None
-
-async def download_poster(poster_url):
-    """Download movie poster from URL"""
-    if poster_url and poster_url != 'N/A':
-        async with aiohttp.ClientSession() as session:
-            async with session.get(poster_url) as response:
-                if response.status == 200:
-                    return await response.read()
-    return None
-
 def determine_audio(movie_details):
-    """
-    Determine audio language/type based on available information
-    
-    Args:
-        movie_details (dict): Movie details from Rapid API
-    Returns:
-        str: Audio language/type
-    """
-    
     audio_options = [
-        'Hindi-English',
-        'Hindi',
-        'Multi-Audio',
-        'Hindi Dubbed',
-        'English Dubbed'
-    ] 
+        "Hindi-English",
+        "Hindi",
+        "Multi-Audio",
+        "Hindi Dubbed",
+        "English Dubbed",
+    ]
+    actors = str(movie_details.get("Actors", "")).lower()
+    plot = str(movie_details.get("Plot", "")).lower()
+    country = str(movie_details.get("Country", "")).lower()
+    language = str(movie_details.get("Language", "")).lower()
     
-    # Safely get values and convert to lowercase, using empty string if not found
-    actors = str(movie_details.get('Actors', '')).lower()
-    plot = str(movie_details.get('Plot', '')).lower()
-    country = str(movie_details.get('Country', '')).lower()
-    language = str(movie_details.get('Language', '')).lower()
-    
-    # Check for Hindi content
-    if 'india' in country or 'hindi' in language:
-        return 'Hindi'
-    
-    if 'hindi' in actors or 'hindi' in plot:
-        return 'Hindi'
-    
-    # Check for English content
-    if 'usa' in country or 'uk' in country or 'english' in language:
-        return 'Hindi-English'
-    
-    if 'english' in actors or 'english' in plot:
-        return 'Hindi-English'
-    
-    # Default behavior for other cases
-    if country and country not in ['usa', 'uk', 'india']:
-        if random.random() < 0.7:  
-            return 'Multi-Audio'
+    if "india" in country or "hindi" in language:
+        return "Hindi"
+    if "hindi" in actors or "hindi" in plot:
+        return "Hindi"
+    if "usa" in country or "uk" in country or "english" in language:
+        return "Hindi-English"
+    if "english" in actors or "english" in plot:
+        return "Hindi-English"
+    if country and country not in ["usa", "uk", "india"]:
+        if random.random() < 0.7:
+            return "Multi-Audio"
         else:
-            return 'Hindi Dubbed'
-    
-    # Use weighted random choice if no specific criteria met
+            return "Hindi Dubbed"
     weights = [0.3, 0.2, 0.3, 0.1, 0.1]
     return random.choices(audio_options, weights=weights)[0]
 
+
 def format_caption(movie, year, audio, language, genre, imdb_rating, runTime, rated, synopsis):
-    """Format the caption with Markdown"""
-    
-    
-    audio = determine_audio({
-        "Language": language,
-        "Genre": genre,
-        "Actors": "",
-        "Plot": synopsis,
-        "Country": ""
-    })
-    
+    audio = determine_audio(
+        {
+            "Language": language,
+            "Genre": genre,
+            "Actors": "",
+            "Plot": synopsis,
+            "Country": "",
+        }
+    )
     try:
         if rated == "Not Rated":
             CertificateRating = "U/A"
@@ -273,22 +110,19 @@ def format_caption(movie, year, audio, language, genre, imdb_rating, runTime, ra
             CertificateRating = rated
     except Exception as e:
         CertificateRating = rated
-        
     try:
-        # Extract the number from the "Runtime" string (e.g., "57 min")
-        minutes = int(runTime.split()[0])  # Get the numeric part
+        minutes = int(runTime.split()[0])
         if minutes > 60:
             hours = minutes // 60
             remaining_minutes = minutes % 60
             formatted_runtime = f"{hours}h {remaining_minutes}min"
-        elif minutes==60:
+        elif minutes == 60:
             hours = minutes // 60
             formatted_runtime = f"{hours}h"
         else:
             formatted_runtime = runTime
     except (ValueError, IndexError):
-        formatted_runtime = runTime  # Use the raw value if parsing fails
-    
+        formatted_runtime = runTime
     caption = f""" {movie}（{year}）
     
 » 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub）
@@ -372,7 +206,7 @@ async def start_command(client, message):
         loading_message = await message.reply_text("Loading... Please wait ⌛")
         
         # Attempt to download and send the start image
-        start_image = await download_image("https://jpcdn.it/img/small/682f656e6957597eebce76a1b99ea9e4.jpg")
+        start_image = await download.download_image("https://jpcdn.it/img/small/682f656e6957597eebce76a1b99ea9e4.jpg")
         if start_image:
             # Convert image data to BytesIO
             image_stream = BytesIO(start_image)
@@ -438,7 +272,7 @@ async def trending_command(client, message):
         status_message = await message.reply_text("Fetching trending content... Please wait!")
         
         # Get trending content
-        trending_data = await get_trending_content(page=page)
+        trending_data = await tmdb.get_trending_content(page=page)
         
         if not trending_data or not trending_data.get('results'):
             await status_message.edit_text("No trending content found.")
@@ -481,7 +315,7 @@ async def popular_command(client, message):
         status_message = await message.reply_text("Fetching popular content... Please wait!")
         
         # Get popular content
-        popular_data = await get_popular_content(page=page)
+        popular_data = await tmdb.get_popular_content(page=page)
         
         if not popular_data or not popular_data.get('results'):
             await status_message.edit_text("No popular content found.")
@@ -525,7 +359,7 @@ async def upcoming_command(client, message):
         status_message = await message.reply_text("Fetching upcoming content... Please wait!")
         
         # Get upcoming content
-        upcoming_data = await get_upcoming_content(page=page)
+        upcoming_data = await tmdb.get_upcoming_content(page=page)
         
         if not upcoming_data or not upcoming_data.get('results'):
             await status_message.edit_text("No upcoming content found.")
@@ -569,13 +403,13 @@ async def callback_query(client, callback_query: CallbackQuery):
             await callback_query.message.edit_text("Loading next page... Please wait!")
             
             if category == "trending":
-                content = await get_trending_content(page=page)
+                content = await tmdb.get_trending_content(page=page)
                 title = "📈 Trending Movies & TV Shows"
             elif category == "popular":
-                content = await get_popular_content(page=page)
+                content = await tmdb.get_popular_content(page=page)
                 title = "🔥 Popular Movies"
             elif category == "upcoming":
-                content = await get_upcoming_content(page=page)
+                content = await tmdb.get_upcoming_content(page=page)
                 title = "🆕 Upcoming Movies"
             
             if content and content.get('results'):
@@ -692,7 +526,7 @@ async def caption_command(client, message):
         status_message = await message.reply_text("Searching for movies... Please wait!")
 
         # Search for movies
-        search_results = await search_titles(movie_name, "movie")
+        search_results = await tmdb.search_titles(movie_name, "movie")
         
         if not search_results:
             await status_message.edit_text("No movies found with that title. Please try a different search.")
@@ -745,7 +579,7 @@ async def series_command(client, message):
         status_message = await message.reply_text("Searching for series... Please wait!")
 
         # Search specifically for TV series
-        results = await search_titles(series_name, "tv")
+        results = await tmdb.search_titles(series_name, "tv")
         
         if not results:
             await status_message.edit_text("No series found with that title. Please try a different search.")
@@ -886,9 +720,9 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
         loading_msg = await callback_query.message.edit_text("Fetching details... Please wait!")
 
         # Get detailed information
-        title_data = await get_title_details(tmdb_id, media_type)
-        similar_data = await get_similar_titles(tmdb_id, media_type)
-        images_data = await get_images(tmdb_id, media_type)
+        title_data = await tmdb.get_title_details(tmdb_id, media_type)
+        similar_data = await tmdb.get_similar_titles(tmdb_id, media_type)
+        images_data = await tmdb.get_images(tmdb_id, media_type)
 
         if not title_data:
             await loading_msg.edit_text("Failed to fetch title details. Please try again.")
@@ -989,7 +823,7 @@ async def caption_command(client, message):
         status_message = await message.reply_text("Searching for movies... Please wait!")
 
         # Search for movies
-        results = await search_titles(movie_name, "movie")
+        results = await tmdb.search_titles(movie_name, "movie")
         
         if not results:
             await status_message.edit_text("No movies found with that title. Please try a different search.")
@@ -1021,7 +855,7 @@ async def series_command(client, message):
         status_message = await message.reply_text("Searching for series... Please wait!")
 
         # Search for series
-        results = await search_titles(series_name, "tv")
+        results = await tmdb.search_titles(series_name, "tv")
         
         if not results:
             await status_message.edit_text("No series found with that title. Please try a different search.")
@@ -1045,7 +879,6 @@ async def start_bot():
         print("Bot Started Successfully!")
 
         while True:
-            # Check if the client is still connected every 10 seconds
             if not espada.is_connected:
                 await espada.reconnect()
             await asyncio.sleep(10)
@@ -1054,7 +887,7 @@ async def start_bot():
         print(f"Bot Crashed: {str(e)}")
         await logger.log_bot_crash(e)
     finally:
-        if espada.is_connected:  # Check if client is still connected before stopping
+        if espada.is_connected:  
             await espada.stop()
             
 if __name__ == "__main__":
