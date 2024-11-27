@@ -429,11 +429,7 @@ async def start_command(client, message):
 async def trending_command(client, message):
     try:
         
-        try:
-            await asyncio.sleep(5)
-            await message.delete(revoke=True)
-        except Exception as e:
-            print(f"Error deleting message: {e}")
+        await message.delete()
         
         parts = message.text.split()
         page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
@@ -476,11 +472,7 @@ async def trending_command(client, message):
 async def popular_command(client, message):
     try:
         
-        try:
-            await asyncio.sleep(5)
-            await message.delete(revoke=True)
-        except Exception as e:
-            print(f"Error deleting message: {e}")
+        await message.delete()
         
         parts = message.text.split()
         page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
@@ -524,11 +516,7 @@ async def popular_command(client, message):
 async def upcoming_command(client, message):
     try:
         
-        try:
-            await asyncio.sleep(5)
-            await message.delete(revoke=True)
-        except Exception as e:
-            print(f"Error deleting message: {e}")
+        await message.delete()
         
         parts = message.text.split()
         page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
