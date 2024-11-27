@@ -677,6 +677,9 @@ async def callback_query(client, callback_query: CallbackQuery):
 @espada.on_message(filters.command(["captionM", "cm"]))
 async def caption_command(client, message):
     try:
+        
+        await message.delete()
+        
         parts = message.text.split()
         if len(parts) < 2:
             await message.reply_text(
@@ -727,6 +730,9 @@ async def caption_command(client, message):
 @espada.on_message(filters.command(["captionS", "cs"]))
 async def series_command(client, message):
     try:
+        
+        await message.delete()
+        
         parts = message.text.split()
         if len(parts) < 2:
             await message.reply_text(
@@ -776,6 +782,9 @@ async def series_command(client, message):
 @espada.on_message(filters.command(["dump"]))
 async def set_dump_channel(client, message):
     try:
+        
+        await message.delete()
+        
         if len(message.command) != 2:
             await message.reply_text(
                 "Please provide the channel ID.\n"
@@ -809,7 +818,7 @@ async def set_dump_channel(client, message):
 @espada.on_message(~filters.command(["start", "captionM", "cm","captionS", "cs"]) & ~filters.channel & ~filters.group)
 async def default_response(client, message):
     try:
-        # Send a default message in response
+        
         await message.reply_text("⚠ Invaild command!")
 
         # Log the default response
