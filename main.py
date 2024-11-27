@@ -3,8 +3,8 @@ from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQ
 from pyrogram.enums import ParseMode
 import asyncio
 import aiohttp
-from datetime import datetime
-from typing import Optional, Dict
+import threading
+from typing import Dict
 from io import BytesIO
 from plugins.logs import Logger
 from script import START_TEXT, HELP_TEXT, SUPPORT_TEXT, ABOUT_TEXT, MOVIE_TEXT
@@ -526,10 +526,18 @@ async def upcoming_command(client, message):
             f"🆕 Upcoming Movies (Page {page}/{upcoming_data['total_pages']})",
             reply_markup=keyboard
         )
-        
+        threading.Timer(2, delete_message_delay, args=[message.chat.id, message.message_id]).start()
+    
     except Exception as e:
         await message.reply_text("An error occurred while fetching upcoming content.")
         print(f"Upcoming command error: {str(e)}")
+        
+def delete_message_delay(chat_id, message_id):
+    try:
+        espada.delete_message(chat_id=chat_id, message_id=message_id)
+    except Exception as e:
+        print(f"Error deleting message{message_id} in chat {chat_id}: {e}")
+        
 
 @espada.on_callback_query()
 async def callback_query(client, callback_query: CallbackQuery):
