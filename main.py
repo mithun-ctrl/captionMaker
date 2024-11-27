@@ -505,6 +505,7 @@ async def upcoming_command(client, message):
         
         # Show loading message
         status_message = await message.reply_text("Fetching upcoming content... Please wait!")
+        threading.Timer(2, delete_message_delay, args=[message.chat.id, message.message_id]).start()
         
         # Get upcoming content
         upcoming_data = await get_upcoming_content(page=page)
@@ -526,7 +527,7 @@ async def upcoming_command(client, message):
             f"🆕 Upcoming Movies (Page {page}/{upcoming_data['total_pages']})",
             reply_markup=keyboard
         )
-        threading.Timer(2, delete_message_delay, args=[message.chat.id, message.message_id]).start()
+        
     
     except Exception as e:
         await message.reply_text("An error occurred while fetching upcoming content.")
