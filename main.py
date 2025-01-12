@@ -19,6 +19,7 @@ from config import (
 )
 from handlers.tmdb import tmdbFunctions
 from handlers.download import downloadHandler
+from handlers.treding import trending_command_handler
 
 if not all([api_id, api_hash, bot_token, log_channel, tmdb_api_token, omdb_api]):
     raise ValueError("Please set environment variables correctly")
@@ -259,48 +260,7 @@ async def start_command(client, message):
             error=e
         )
 
-@espada.on_message(filters.command(["trending", "tr"]))
-async def trending_command(client, message):
-    try:
-        
-        await message.delete()
-        
-        parts = message.text.split()
-        page = int(parts[1]) if len(parts) > 1 and parts[1].isdigit() else 1
-        
-        # Show loading message
-        status_message = await message.reply_text("Fetching trending content... Please wait!")
-        
-        # Get trending content
-        trending_data = await tmdb.get_trending_content(page=page)
-        
-        if not trending_data or not trending_data.get('results'):
-            await status_message.edit_text("No trending content found.")
-            return
-        
-        # Create keyboard with results
-        keyboard = create_content_list_keyboard(
-            trending_data['results'],
-            page,
-            trending_data['total_pages'],
-            'trending'
-        )
-        
-        # Update message with results
-        await status_message.edit_text(
-            f"📈 Trending Movies & TV Shows (Page {page}/{trending_data['total_pages']})",
-            reply_markup=keyboard
-        )
-        await logger.log_message(
-            action="Trending Command",
-            user_id=message.from_user.id,
-            username=message.from_user.username,
-            chat_id=message.chat.id
-        )
-        
-    except Exception as e:
-        await message.reply_text("An error occurred while fetching trending content.")
-        print(f"Trending command error: {str(e)}")
+@espada.on_message(filters.command(["trending", "tr"]))(trending_command_handler)
 
 @espada.on_message(filters.command(["popular", "pp"]))
 async def popular_command(client, message):
