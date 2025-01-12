@@ -19,7 +19,7 @@ from config import (
 )
 from handlers.tmdb import tmdbFunctions
 from handlers.download import downloadHandler
-from handlers.treding import trending_command_handler
+from handlers.trending import trending_command_handler
 
 if not all([api_id, api_hash, bot_token, log_channel, tmdb_api_token, omdb_api]):
     raise ValueError("Please set environment variables correctly")
