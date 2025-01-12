@@ -1,6 +1,6 @@
 from pyrogram import filters
 from utils.keyboard_utils import create_content_list_keyboard
-from tmdb import tmdbFunctions
+from handlers.tmdb import tmdbFunctions
 from plugins.logs import Logger
 
 tmdb = tmdbFunctions()
