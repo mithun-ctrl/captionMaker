@@ -288,8 +288,7 @@ async def trending_command(client, message):
 
         # Update message with results
         await status_message.edit_text(
-            f"📈 Trending Movies & TV Shows (Page {
-                page}/{trending_data['total_pages']})",
+            f"📈 Trending Movies & TV Shows (Page {page}/{trending_data['total_pages']})",
             reply_markup=keyboard
         )
         await logger.log_message(
