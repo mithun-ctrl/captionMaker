@@ -781,12 +781,18 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
         # Delete loading message
         await loading_msg.delete()
 
-        # Send main poster with caption
-        poster_path = title_data.get('poster_path')
-        if poster_path:
-            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
+        if media_type == "tv":
+            # Use backdrop for 16:9 ratio for TV series
+            image_path = title_data.get('backdrop_path')
+            image_size = 'w1280'  # 16:9 aspect ratio
+        else:
+            image_path = title_data.get('poster_path')
+            image_size = 'w500'  # Default poster size
+        
+        if image_path:
+            image_url = f"https://image.tmdb.org/t/p/{image_size}{image_path}"
             await callback_query.message.reply_photo(
-                photo=poster_url,
+                photo=image_url,
                 caption=caption,
                 parse_mode=ParseMode.MARKDOWN
             )
