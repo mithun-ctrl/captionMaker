@@ -77,18 +77,18 @@ def determine_audio(movie_details):
     language = str(movie_details.get("Language", "")).lower()
     
     if "india" in country or "hindi" in language:
-        return "Hindi"
+        return "Hin+Tam+Tel"
     if "hindi" in actors or "hindi" in plot:
-        return "Hindi"
+        return "Hin+Tam+Tel"
     if "usa" in country or "uk" in country or "english" in language:
-        return "Hindi-English"
+        return "Hin+Tam+Tel"
     if "english" in actors or "english" in plot:
-        return "Hindi-English"
+        return "Hin+Tam+Tel"
     if country and country not in ["usa", "uk", "india"]:
         if random.random() < 0.7:
-            return "Multi-Audio"
+            return "Hin+Tam+Tel+Kan+Mal"
         else:
-            return "Hindi Dubbed"
+            return "Hin+Tam+Tel+Kan+Mal"
     weights = [0.3, 0.2, 0.3, 0.1, 0.1]
     return random.choices(audio_options, weights=weights)[0]
 
@@ -190,8 +190,6 @@ def format_series_caption(movie, year, audio, language, genre, imdb_rating, runT
 ╰──────────────────────
 ┌────────────────────────
 {season_count}
-└────────────────────────
-│[Click Here To Access Files]
 └────────────────────────
  ‣ @TeamXPirates
 > [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
@@ -736,7 +734,7 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
                 'movie_p': title_data.get('name', 'N/A'),
                 'year_p': title_data.get('first_air_date', 'N/A')[:4] if title_data.get('first_air_date') else 'N/A',
             }
-            additional_message = f"""`[PirecyKings2] S{{season}} E{{episode}} {series_data['movie_p']} ({series_data['year_p']}) @pirecykings2`
+            additional_message = f"""`[PirecyKings3] S{{season}} E{{episode}} {series_data['movie_p']} ({series_data['year_p']}) @pirecykings3`
 
 `S01 English - Hindi [480p]`
 
@@ -762,7 +760,7 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
                 'year_p': title_data.get('release_date', 'N/A')[:4] if title_data.get('release_date') else 'N/A',
                 'audio_p': determine_audio(title_data)
             }
-            additional_message = f"""`[PirecyKings2] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings2`
+            additional_message = f"""`[PirecyKings3] {movie_data['movie_p']} ({movie_data['year_p']}) @pirecykings3`
 
 `{movie_data['movie_p']} ({movie_data['year_p']}) 480p - 1080p [{movie_data['audio_p']}]`"""
             
