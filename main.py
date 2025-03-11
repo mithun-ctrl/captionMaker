@@ -76,7 +76,7 @@ def determine_audio(movie_details):
     country = str(movie_details.get("Country", "")).lower()
     language = str(movie_details.get("Language", "")).lower()
     
-    if "india" in country or "hindi" in language:
+   if "india" in country or "hindi" in language:
         return "Hindi"
     if "hindi" in actors or "hindi" in plot:
         return "Hindi"
@@ -190,8 +190,6 @@ def format_series_caption(movie, year, audio, language, genre, imdb_rating, runT
 ╰──────────────────────
 ┌────────────────────────
 │{season_count}
-└────────────────────────
-│[Click Here To Access Files]
 └────────────────────────
  ‣ @TeamXPirates
 > [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
@@ -814,12 +812,18 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
         # Delete loading message
         await loading_msg.delete()
 
-        # Send main poster with caption
-        poster_path = title_data.get('poster_path')
-        if poster_path:
-            poster_url = f"https://image.tmdb.org/t/p/w500{poster_path}"
+        if media_type == "tv":
+            # Use backdrop for 16:9 ratio for TV series
+            image_path = title_data.get('backdrop_path')
+            image_size = 'w1280'  # 16:9 aspect ratio
+        else:
+            image_path = title_data.get('poster_path')
+            image_size = 'w500'  # Default poster size
+        
+        if image_path:
+            image_url = f"https://image.tmdb.org/t/p/{image_size}{image_path}"
             await callback_query.message.reply_photo(
-                photo=poster_url,
+                photo=image_url,
                 caption=caption,
                 parse_mode=ParseMode.MARKDOWN
             )
