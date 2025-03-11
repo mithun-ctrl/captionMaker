@@ -14,7 +14,7 @@ TMDB_BASE_URL = "https://api.themoviedb.org/3"
 espada = Client("movie_caption_bot", api_id=api_id, api_hash=api_hash, bot_token=bot_token)
 
 #dump channel
-
+#not working currently
 DUMP_CHANNELS: Dict[int, int] = {}
 
 #tmdb header
