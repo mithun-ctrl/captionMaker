@@ -67,28 +67,28 @@ def determine_audio(movie_details):
     audio_options = [
         "Hindi-English",
         "Hindi",
-        "Multi-Audio",
-        "Hindi Dubbed",
-        "English Dubbed",
+        "Hindi-English",
+        "Hindi-English",
+        "English-Hindi",
     ]
     actors = str(movie_details.get("Actors", "")).lower()
     plot = str(movie_details.get("Plot", "")).lower()
     country = str(movie_details.get("Country", "")).lower()
     language = str(movie_details.get("Language", "")).lower()
     
-    if "india" in country or "hindi" in language:
-        return "Hin+Tam+Tel"
+   if "india" in country or "hindi" in language:
+        return "Hindi"
     if "hindi" in actors or "hindi" in plot:
-        return "Hin+Tam+Tel"
+        return "Hindi"
     if "usa" in country or "uk" in country or "english" in language:
-        return "Hin+Tam+Tel"
+        return "Hindi-English"
     if "english" in actors or "english" in plot:
-        return "Hin+Tam+Tel"
+        return "Hindi-English"
     if country and country not in ["usa", "uk", "india"]:
         if random.random() < 0.7:
-            return "Hin+Tam+Tel+Kan+Mal"
+            return "Hindi-English"
         else:
-            return "Hin+Tam+Tel+Kan+Mal"
+            return "Hindi-English"
     weights = [0.3, 0.2, 0.3, 0.1, 0.1]
     return random.choices(audio_options, weights=weights)[0]
 
@@ -123,9 +123,9 @@ def format_caption(movie, year, audio, language, genre, imdb_rating, runTime, ra
             formatted_runtime = runTime
     except (ValueError, IndexError):
         formatted_runtime = runTime
-    caption = f""" {movie}（{year}）
+    caption = f""" {movie} ({year})
     
-» 𝗔𝘂𝗱𝗶𝗼: {audio}（Esub）
+» 𝗔𝘂𝗱𝗶𝗼: {audio} (Esub)
 » 𝗤𝘂𝗮𝗹𝗶𝘁𝘆: 480p | 720p | 1080p |
 » 𝗚𝗲𝗻𝗿𝗲: {genre}
 » 𝗜𝗺𝗱𝗯 𝗥𝗮𝘁𝗶𝗻𝗴: {imdb_rating}/10
@@ -180,16 +180,16 @@ def format_series_caption(movie, year, audio, language, genre, imdb_rating, runT
 ╭──────────────────────
  ‣ 𝗧𝘆𝗽𝗲: {type.capitalize()}
  ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: {totalSeason}
- ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 𝟬𝟭-𝟬8
+ ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 01-08
  ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdb_rating}/10
  ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 𝟰𝟴𝟬𝗽, 𝟳𝟮𝟬𝗽, 𝟭𝟬𝟴𝟬𝗽
- ‣ 𝗔𝘂𝗱𝗶𝗼:  {audio}
+ ‣ 𝗔𝘂𝗱𝗶𝗼: {audio}
  ‣ 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {formatted_runtime}
 ├──────────────────────
  ‣ 𝗚𝗲𝗻𝗿𝗲𝘀:{genre}
 ╰──────────────────────
 ┌────────────────────────
-{season_count}
+│{season_count}
 └────────────────────────
  ‣ @TeamXPirates
 > [𝗜𝗳 𝗬𝗼𝘂 𝗦𝗵𝗮𝗿𝗲 𝗢𝘂𝗿 𝗙𝗶𝗹𝗲𝘀 𝗪𝗶𝘁𝗵𝗼𝘂𝘁 𝗖𝗿𝗲𝗱𝗶𝘁, 𝗧𝗵𝗲𝗻 𝗬𝗼𝘂 𝗪𝗶𝗹𝗹 𝗯𝗲 𝗕𝗮𝗻𝗻𝗲𝗱]"""
@@ -409,6 +409,23 @@ async def callback_query(client, callback_query: CallbackQuery):
             elif category == "upcoming":
                 content = await tmdb.get_upcoming_content(page=page)
                 title = "🆕 Upcoming Movies"
+            elif category == "movie_search":
+                # Get the original search query from the message text
+                message_text = callback_query.message.text
+                # Extract the search query from the message
+                search_query = message_text.split("'")[1] if "'" in message_text else ""
+                content = await tmdb.full_search_titles(search_query, "movie", page=page)
+                title = f"🎬 Found movies matching '{search_query}'"
+            elif category == "series_search":
+                # Get the original search query from the message text
+                message_text = callback_query.message.text
+                # Extract the search query from the message
+                search_query = message_text.split("'")[1] if "'" in message_text else ""
+                content = await tmdb.full_search_titles(search_query, "tv", page=page)
+                # Mark each result as TV
+                for result in content.get('results', []):
+                    result['media_type'] = 'tv'
+                title = f"📺 Found series matching '{search_query}'"
             
             if content and content.get('results'):
                 keyboard = create_content_list_keyboard(
@@ -430,6 +447,7 @@ async def callback_query(client, callback_query: CallbackQuery):
             if len(parts) >= 3:
                 tmdb_id = parts[1]
                 media_type = parts[2]
+                # Process the title selection without deleting the search results
                 await process_title_selection(callback_query, tmdb_id, media_type)
             else:
                 await callback_query.answer("Invalid selection data")
@@ -509,7 +527,6 @@ async def callback_query(client, callback_query: CallbackQuery):
 @espada.on_message(filters.command(["captionM", "cm"]))
 async def caption_command(client, message):
     try:
-        
         await message.delete()
         
         parts = message.text.split()
@@ -520,31 +537,39 @@ async def caption_command(client, message):
             )
             return
 
-        movie_name = " ".join(parts[1:])
+        # Check if page number is provided
+        page = 1
+        if parts[-1].isdigit() and len(parts) > 2:
+            page = int(parts[-1])
+            movie_name = " ".join(parts[1:-1])
+        else:
+            movie_name = " ".join(parts[1:])
+            
         status_message = await message.reply_text("Searching for movies... Please wait!")
 
-        # Search for movies
-        search_results = await tmdb.search_titles(movie_name, "movie")
+        # Search for movies with pagination
+        search_results = await tmdb.search_titles(movie_name, "movie", page=page)
         
         if not search_results:
             await status_message.edit_text("No movies found with that title. Please try a different search.")
             return
 
-        results = {
-            'results': search_results[:10],
-            'page': 1,
-            'total_pages': 1
-        }
+        # Get total_pages from search results
+        # Create a new endpoint in tmdb.py that returns the full response including total_pages
+        full_search_data = await tmdb.full_search_titles(movie_name, "movie", page=page)
+        total_pages = full_search_data.get('total_pages', 1)
         
-        keyborard = create_content_list_keyboard(
-            results['results'],
-            results['page'],
-            results['total_pages'],
+        # Create keyboard with results and pagination
+        keyboard = create_content_list_keyboard(
+            search_results[:10],  # Limit to top 10 results per page
+            page,
+            total_pages,
             'movie_search'
         )
+        
         await status_message.edit_text(
-            "Found the following movies. Please select one:",
-            reply_markup=keyborard
+            f"🎬 Found movies matching '{movie_name}' (Page {page}/{total_pages}):",
+            reply_markup=keyboard
         )
         
         await logger.log_message(
@@ -556,13 +581,12 @@ async def caption_command(client, message):
 
     except Exception as e:
         await message.reply_text("An error occurred while processing your request. Please try again later.")
-        print(f"Movie search error: {str(e)}")
+        print(f"Movie search error: {str(e)}")  
         
         
 @espada.on_message(filters.command(["captionS", "cs"]))
 async def series_command(client, message):
     try:
-        
         await message.delete()
         
         parts = message.text.split()
@@ -573,11 +597,20 @@ async def series_command(client, message):
             )
             return
 
-        series_name = " ".join(parts[1:])
+        # Check if page number is provided
+        page = 1
+        if parts[-1].isdigit() and len(parts) > 2:
+            page = int(parts[-1])
+            series_name = " ".join(parts[1:-1])
+        else:
+            series_name = " ".join(parts[1:])
+            
         status_message = await message.reply_text("Searching for series... Please wait!")
 
-        # Search specifically for TV series
-        results = await tmdb.search_titles(series_name, "tv")
+        # Search specifically for TV series with pagination
+        full_search_data = await tmdb.full_search_titles(series_name, "tv", page=page)
+        results = full_search_data.get('results', [])
+        total_pages = full_search_data.get('total_pages', 1)
         
         if not results:
             await status_message.edit_text("No series found with that title. Please try a different search.")
@@ -587,16 +620,16 @@ async def series_command(client, message):
         for result in results:
             result['media_type'] = 'tv'
 
-        # Create keyboard with properly tagged results
+        # Create keyboard with properly tagged results and pagination
         keyboard = create_content_list_keyboard(
-            results[:10],
-            1,
-            1,
-            "series_search"
+            results[:10],  # Limit to top 10 results per page
+            page,
+            total_pages,
+            'series_search'
         )
         
         await status_message.edit_text(
-            "📺 Found the following series. Please select one:",
+            f"📺 Found series matching '{series_name}' (Page {page}/{total_pages}):",
             reply_markup=keyboard
         )
         
@@ -714,8 +747,8 @@ async def process_backdrops(client, user_id: int, title_data: dict, images_data:
 async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, media_type: str = "movie") -> None:
     """Process the selected title and generate the appropriate caption with related content"""
     try:
-        # Show loading message
-        loading_msg = await callback_query.message.edit_text("Fetching details... Please wait!")
+        # Create a separate loading message instead of editing the original
+        loading_msg = await callback_query.message.reply_text("Fetching details... Please wait!")
 
         # Get detailed information
         title_data = await tmdb.get_title_details(tmdb_id, media_type)
@@ -807,7 +840,12 @@ async def process_title_selection(callback_query: CallbackQuery, tmdb_id: str, m
     except Exception as e:
         error_msg = f"Title selection error: {str(e)}"
         print(error_msg)
-        await callback_query.message.edit_text(
+        try:
+            # Try to delete the loading message if it exists
+            await loading_msg.delete()
+        except:
+            pass
+        await callback_query.message.reply_text(
             "An error occurred while processing your selection. Please try again."
         )
 

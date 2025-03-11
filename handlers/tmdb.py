@@ -109,3 +109,21 @@ class tmdbFunctions:
         endpoint = "movie/upcoming"
         params = {"page": page}
         return await self.get_tmdb_data(endpoint, params)
+    
+    
+    async def full_search_titles(self, query, media_type="movie", page=1):
+        """Search for movies/TV shows and return full response including pagination info"""
+        params = {
+            "query": query,
+            "include_adult": "false",
+            "language": "en-US",
+            "page": page
+        }
+    
+        if media_type == "movie":
+            endpoint = "search/movie"
+        else:
+            endpoint = "search/tv"
+        
+        data = await self.get_tmdb_data(endpoint, params)
+        return data if data else {"results": [], "page": 1, "total_pages": 1}
