@@ -394,8 +394,9 @@ async def callback_query(client, callback_query: CallbackQuery):
         data = callback_query.data
         
         if "_page_" in data:
-            category, _, page = data.split("_")
-            page = int(page)
+            parts = data.split("_page_")
+            category = parts[0]
+            page = int(parts[1])
             
             # Show loading message
             await callback_query.message.edit_text("Loading next page... Please wait!")
