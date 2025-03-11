@@ -154,7 +154,7 @@ def format_series_caption(movie, year, audio, language, genre, imdb_rating, runT
     try:
         totalSeason = int(totalSeason)
         for season in range(1, totalSeason+1):
-            season_count += f"\n│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]\n"
+            season_count += f"\n│S{season}) [𝟺𝟾𝟶ᴘ]  [𝟽𝟸𝟶ᴘ]  [𝟷𝟶𝟾𝟶ᴘ]"
     except ValueError:
         season_count = "N/A"
     
@@ -182,11 +182,11 @@ def format_series_caption(movie, year, audio, language, genre, imdb_rating, runT
  ‣ 𝗦𝗲𝗮𝘀𝗼𝗻: {totalSeason}
  ‣ 𝗘𝗽𝗶𝘀𝗼𝗱𝗲𝘀: 01-08
  ‣ 𝗜𝗠𝗗𝗯 𝗥𝗮𝘁𝗶𝗻𝗴𝘀: {imdb_rating}/10
- ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 𝟰𝟴𝟬𝗽, 𝟳𝟮𝟬𝗽, 𝟭𝟬𝟴𝟬𝗽
+ ‣ 𝗣𝗶𝘅𝗲𝗹𝘀: 480p, 720p, 1080p
  ‣ 𝗔𝘂𝗱𝗶𝗼: {audio}
  ‣ 𝗥𝘂𝗻𝘁𝗶𝗺𝗲: {formatted_runtime}
 ├──────────────────────
- ‣ 𝗚𝗲𝗻𝗿𝗲𝘀:{genre}
+ ‣ 𝗚𝗲𝗻𝗿𝗲𝘀: {genre}
 ╰──────────────────────
 ┌────────────────────────
 │{season_count}
